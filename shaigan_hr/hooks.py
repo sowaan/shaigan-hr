@@ -1,7 +1,7 @@
-app_name = "quarter_leave"
-app_title = "Quarter Day Leave"
-app_publisher = "Sufyan"
-app_description = "Calculates balance for Quarter Day leave too."
+app_name = "shaigan_hr"
+app_title = "Shaigan HR"
+app_publisher = "Sowaan"
+app_description = "Enhanced ERP leave module to support \'Quarter Day Leave\' for 0.25 days, in addition to full and half-day options."
 app_email = "sufyan.sadiq@sowaan.com"
 app_license = "mit"
 # required_apps = []
@@ -10,15 +10,15 @@ app_license = "mit"
 # ------------------
 
 # include js, css files in header of desk.html
-# app_include_css = "/assets/quarter_leave/css/quarter_leave.css"
-# app_include_js = "/assets/quarter_leave/js/quarter_leave.js"
+# app_include_css = "/assets/shaigan_hr/css/shaigan_hr.css"
+# app_include_js = "/assets/shaigan_hr/js/shaigan_hr.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/quarter_leave/css/quarter_leave.css"
-# web_include_js = "/assets/quarter_leave/js/quarter_leave.js"
+# web_include_css = "/assets/shaigan_hr/css/shaigan_hr.css"
+# web_include_js = "/assets/shaigan_hr/js/shaigan_hr.js"
 
 # include custom scss in every website theme (without file extension ".scss")
-# website_theme_scss = "quarter_leave/public/scss/website"
+# website_theme_scss = "shaigan_hr/public/scss/website"
 
 # include js, css files in header of web form
 # webform_include_js = {"doctype": "public/js/doctype.js"}
@@ -28,7 +28,7 @@ app_license = "mit"
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Leave Application" : "quarter_day_leave/overrides/leave_application.js"}
+doctype_js = {"Leave Application" : "shaigan_hr/overrides/leave_application.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -36,7 +36,7 @@ doctype_js = {"Leave Application" : "quarter_day_leave/overrides/leave_applicati
 # Svg Icons
 # ------------------
 # include app icons in desk
-# app_include_icons = "quarter_leave/public/icons.svg"
+# app_include_icons = "shaigan_hr/public/icons.svg"
 
 # Home Pages
 # ----------
@@ -60,43 +60,43 @@ doctype_js = {"Leave Application" : "quarter_day_leave/overrides/leave_applicati
 
 # add methods and filters to jinja environment
 # jinja = {
-# 	"methods": "quarter_leave.utils.jinja_methods",
-# 	"filters": "quarter_leave.utils.jinja_filters"
+# 	"methods": "shaigan_hr.utils.jinja_methods",
+# 	"filters": "shaigan_hr.utils.jinja_filters"
 # }
 
 # Installation
 # ------------
 
-# before_install = "quarter_leave.install.before_install"
-# after_install = "quarter_leave.install.after_install"
+# before_install = "shaigan_hr.install.before_install"
+# after_install = "shaigan_hr.install.after_install"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "quarter_leave.uninstall.before_uninstall"
-# after_uninstall = "quarter_leave.uninstall.after_uninstall"
+# before_uninstall = "shaigan_hr.uninstall.before_uninstall"
+# after_uninstall = "shaigan_hr.uninstall.after_uninstall"
 
 # Integration Setup
 # ------------------
 # To set up dependencies/integrations with other apps
 # Name of the app being installed is passed as an argument
 
-# before_app_install = "quarter_leave.utils.before_app_install"
-# after_app_install = "quarter_leave.utils.after_app_install"
+# before_app_install = "shaigan_hr.utils.before_app_install"
+# after_app_install = "shaigan_hr.utils.after_app_install"
 
 # Integration Cleanup
 # -------------------
 # To clean up dependencies/integrations with other apps
 # Name of the app being uninstalled is passed as an argument
 
-# before_app_uninstall = "quarter_leave.utils.before_app_uninstall"
-# after_app_uninstall = "quarter_leave.utils.after_app_uninstall"
+# before_app_uninstall = "shaigan_hr.utils.before_app_uninstall"
+# after_app_uninstall = "shaigan_hr.utils.after_app_uninstall"
 
 # Desk Notifications
 # ------------------
 # See frappe.core.notifications.get_notification_config
 
-# notification_config = "quarter_leave.notifications.get_notification_config"
+# notification_config = "shaigan_hr.notifications.get_notification_config"
 
 # Permissions
 # -----------
@@ -115,7 +115,7 @@ doctype_js = {"Leave Application" : "quarter_day_leave/overrides/leave_applicati
 # Override standard doctype classes
 
 override_doctype_class = {
-	"Leave Application": "quarter_leave.quarter_day_leave.overrides.quarter_leave_application.QuarterLeaveApplication"
+	"Leave Application": "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.QuarterLeaveApplication"
 }
 
 # Document Events
@@ -135,39 +135,39 @@ override_doctype_class = {
 
 # scheduler_events = {
 # 	"all": [
-# 		"quarter_leave.tasks.all"
+# 		"shaigan_hr.tasks.all"
 # 	],
 # 	"daily": [
-# 		"quarter_leave.tasks.daily"
+# 		"shaigan_hr.tasks.daily"
 # 	],
 # 	"hourly": [
-# 		"quarter_leave.tasks.hourly"
+# 		"shaigan_hr.tasks.hourly"
 # 	],
 # 	"weekly": [
-# 		"quarter_leave.tasks.weekly"
+# 		"shaigan_hr.tasks.weekly"
 # 	],
 # 	"monthly": [
-# 		"quarter_leave.tasks.monthly"
+# 		"shaigan_hr.tasks.monthly"
 # 	],
 # }
 
 # Testing
 # -------
 
-# before_tests = "quarter_leave.install.before_tests"
+# before_tests = "shaigan_hr.install.before_tests"
 
 # Overriding Methods
 # ------------------------------
 #
 override_whitelisted_methods = {
-	"hrms.hr.doctype.leave_application.leave_application.get_number_of_leave_days" : "quarter_leave.quarter_day_leave.overrides.quarter_leave_application.get_number_of_leave_day"
+	"hrms.hr.doctype.leave_application.leave_application.get_number_of_leave_days" : "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.get_number_of_leave_day"
 }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 # override_doctype_dashboards = {
-# 	"Task": "quarter_leave.task.get_dashboard_data"
+# 	"Task": "shaigan_hr.task.get_dashboard_data"
 # }
 
 # exempt linked doctypes from being automatically cancelled
@@ -181,13 +181,13 @@ override_whitelisted_methods = {
 
 # Request Events
 # ----------------
-# before_request = ["quarter_leave.utils.before_request"]
-# after_request = ["quarter_leave.utils.after_request"]
+# before_request = ["shaigan_hr.utils.before_request"]
+# after_request = ["shaigan_hr.utils.after_request"]
 
 # Job Events
 # ----------
-# before_job = ["quarter_leave.utils.before_job"]
-# after_job = ["quarter_leave.utils.after_job"]
+# before_job = ["shaigan_hr.utils.before_job"]
+# after_job = ["shaigan_hr.utils.after_job"]
 
 # User Data Protection
 # --------------------
@@ -217,7 +217,7 @@ override_whitelisted_methods = {
 # --------------------------------
 
 # auth_hooks = [
-# 	"quarter_leave.auth.validate"
+# 	"shaigan_hr.auth.validate"
 # ]
 
 # Automatically update python controller files with type annotations for this app.

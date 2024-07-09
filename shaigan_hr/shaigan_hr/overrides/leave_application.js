@@ -51,7 +51,7 @@ frappe.ui.form.on("Leave Application", {
 
 		if (frm.doc.employee) {
 			frappe.call({
-				method: "quarter_leave.quarter_day_leave.overrides.quarter_leave_application.get_leave_details",
+				method: "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.get_leave_details",
 				async: false,
 				args: {
 					employee: frm.doc.employee,
@@ -199,7 +199,7 @@ frappe.ui.form.on("Leave Application", {
 			frm.doc.to_date
 		) {
 			return frappe.call({
-				method: "quarter_leave.quarter_day_leave.overrides.quarter_leave_application.get_leave_balance_on",
+				method: "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.get_leave_balance_on",
 				args: {
 					employee: frm.doc.employee,
 					date: frm.doc.from_date,
@@ -222,7 +222,7 @@ frappe.ui.form.on("Leave Application", {
 		if (frm.doc.from_date && frm.doc.to_date && frm.doc.employee && frm.doc.leave_type) {
 			// server call is done to include holidays in leave days calculations
 			return frappe.call({
-				method: "quarter_leave.quarter_day_leave.overrides.quarter_leave_application.get_number_of_leave_day",
+				method: "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.get_number_of_leave_day",
 				args: {
 					employee: frm.doc.employee,
 					leave_type: frm.doc.leave_type,

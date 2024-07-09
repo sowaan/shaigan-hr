@@ -1,6 +1,6 @@
-## Quarter Day Leave
+## Shaigan HR
 
-Calculates balance for Quarter Day leave too.
+Enhanced ERP leave module to support 'Quarter Day Leave' for 0.25 days, in addition to full and half-day options.
 
 #### License
 

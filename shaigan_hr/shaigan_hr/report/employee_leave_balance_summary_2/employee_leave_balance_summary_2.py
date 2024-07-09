@@ -5,7 +5,7 @@
 import frappe
 from frappe import _
 
-from quarter_leave.quarter_day_leave.overrides.quarter_leave_application import get_leave_details
+from shaigan_hr.shaigan_hr.overrides.quarter_leave_application import get_leave_details
 
 
 def execute(filters=None):

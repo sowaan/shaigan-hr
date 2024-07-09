@@ -19,7 +19,7 @@ from hrms.hr.doctype.leave_allocation.leave_allocation import get_previous_alloc
 # 	get_leave_balance_on,
 # 	get_leaves_for_period,
 # )
-from quarter_leave.quarter_day_leave.overrides.quarter_leave_application import (
+from shaigan_hr.shaigan_hr.overrides.quarter_leave_application import (
 	get_leave_balance_on,
 	get_leaves_for_period,
 )
