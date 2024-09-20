@@ -73,23 +73,110 @@ class QuarterLeaveApplication(LeaveApplication):
 	def after_insert(self):
 		self.notify_approver()
 
-	def validate(self):
-		print("\n\n\n\n\n\n\n 71 Override For Class\n\n\n\n\n\n\n")
 
+	def validate(self):
 		validate_active_employee(self.employee)
 		set_employee_name(self)
 		self.validate_dates()
 		self.validate_balance_leaves()
-		self.validate_leave_overlap()
+		if self.custom_quarter_day != 1 :
+			self.validate_leave_overlap()
 		self.validate_max_days()
 		self.show_block_day_warning()
 		self.validate_block_days()
 		self.validate_salary_processed_days()
-		self.validate_attendance()
+		if self.custom_quarter_day != 1 :
+			self.validate_attendance()
 		self.set_half_day_date()
 		if frappe.db.get_value("Leave Type", self.leave_type, "is_optional_leave"):
 			self.validate_optional_leave()
 		self.validate_applicable_after()
+
+		if self.custom_quarter_day == 1:
+			self.total_leave_days = 0.25
+			frappe.db.set_value("Leave Application",self.name,"total_leave_days",0.25)
+
+
+	def before_save(self) :
+		
+		if self.custom_quarter_day == 1:
+			self.total_leave_days = 0.25
+			frappe.db.set_value("Leave Application",self.name,"total_leave_days",0.25)
+			date_diff = frappe.utils.date_diff(self.to_date, self.from_date) + 1
+			if date_diff > 1 :
+				frappe.throw("Leave Days cannot be more than 1 Day. From Date and To Date must be same for Quarter Day Leave Application.")
+			# if self.custom_from_time :
+			# 	to_time = frappe.utils.add_to_date(self.custom_from_time, hours=2.25)
+			# 	to = frappe.utils.get_time(str(to_time))
+			# 	self.custom_to_time = to
+
+		if self.custom_quarter_day == 1 :
+			values = {
+				'name' : self.name ,
+				'employee' : self.employee ,
+				'from_date' : self.from_date ,
+				'from_time' : self.custom_from_time ,
+				'to_time' : self.custom_to_time ,
+			}            		
+			la_list = frappe.db.sql(""" 
+				SELECT 
+					name
+				FROM
+					`tabLeave Application`
+				WHERE
+					name != %(name)s
+					AND employee = %(employee)s
+					AND from_date = %(from_date)s
+					AND custom_quarter_day = 1
+					AND status = 'Approved'
+					AND docstatus = 1
+					AND ( ( custom_from_time BETWEEN %(from_time)s AND %(to_time)s ) OR ( custom_to_time BETWEEN %(from_time)s AND %(to_time)s ) )
+			""", values=values, as_dict=1)          	
+			if la_list :
+				frappe.throw("Your Quarter Leave Time is Overlapping")
+
+
+
+    # Sufyan Created this Function 
+	def before_submit(self):
+		
+		if self.custom_quarter_day == 1 and self.status == 'Approved':
+			
+			att_list = frappe.get_list("Attendance",
+							filters={
+								'employee': self.employee,
+								'attendance_date': self.from_date,
+								'docstatus': 1,
+							})
+			if att_list :
+				att_doc = frappe.get_doc('Attendance',att_list[0].name)
+				if att_doc.status not in ['Present','Half Day'] :
+					frappe.throw("The employee is either 'Absent' , 'On Leave' or 'Works From Home'.")
+				elif att_doc.custom_attendance_status not in ['3 Quarters','Half Day'] :
+					frappe.throw("Employee has worked below or equal to 1 Quarter.You can not approved Quarter Leave for this date.")
+				else :
+					if self.custom_system_generated != 1 :
+						att_doc.append('custom_quarter_leaves', {
+							'leave_application': self.name,
+							'leave_type': self.leave_type,
+							'from_time': self.custom_from_time,
+							'to_time': self.custom_to_time,
+						})
+						att_doc.save()
+					else :
+						att_doc.append('custom_quarter_leaves', {
+							'leave_application': self.name,
+							'leave_type': self.leave_type,
+							'from_time': '',
+							'to_time': '',
+							'system_generated': 1,
+						})
+						att_doc.save()
+
+
+
+
+
 
 	def on_update(self):
 		if self.status == "Open" and self.docstatus < 1:
@@ -106,7 +193,8 @@ class QuarterLeaveApplication(LeaveApplication):
 			frappe.throw(_("Only Leave Applications with status 'Approved' and 'Rejected' can be submitted"))
 
 		self.validate_back_dated_application()
-		self.update_attendance()
+		if self.custom_quarter_day != 1 :
+			self.update_attendance()
 
 		# notify leave applier about approval
 		if frappe.db.get_single_value("HR Settings", "send_leave_notification"):
@@ -116,6 +204,24 @@ class QuarterLeaveApplication(LeaveApplication):
 		self.reload()
 
 	def before_cancel(self):
+		if self.custom_quarter_day == 1 and self.status == 'Approved' :
+			att = frappe.db.exists("Attendance",{
+				'employee': self.employee,
+				'attendance_date': self.from_date,
+				'docstatus': 1,
+			})
+			if att:
+				att_doc = frappe.get_doc("Attendance", att)
+				for i, row in enumerate(att_doc.custom_quarter_leaves):
+					if str(row.leave_application) == str(self.name) :
+						del att_doc.custom_quarter_leaves[i]
+						att_doc.save()
+						break
+				# if not att_doc.custom_quarter_leaves:
+					# if att_doc.status != 2 :
+						# att_doc.cancel()
+					# att_doc.delete()								
+
 		self.status = "Cancelled"
 
 	def on_cancel(self):
