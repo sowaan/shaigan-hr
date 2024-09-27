@@ -137,7 +137,7 @@ def mark_attendance_and_link_log(
     penalties = count_penalties(logs, employee, attendance_date, shift, working_hours)
     ot_hrs = calculate_ot_hours(logs, employee, attendance_date, shift)
     
-    shift_type_doc = frappe.get_doc("Shift Type",shift)
+    # shift_type_doc = frappe.get_doc("Shift Type",shift)
 
     att_status = ''
     q = ''
@@ -236,9 +236,9 @@ def calculate_working_hours(logs, employee, attendance_date, shift_type, check_i
     outside_shift_seconds = 0
     last_in_time = None
 
-    shift_type_doc = frappe.get_doc('Shift Type', shift_type)
-    shift_start = get_datetime(f"{attendance_date} {shift_type_doc.start_time}")
-    shift_end = get_datetime(f"{attendance_date} {shift_type_doc.end_time}")
+    # shift_type_doc = frappe.get_doc('Shift Type', shift_type)
+    shift_start = get_datetime(f"{attendance_date} {shift_type.start_time}")
+    shift_end = get_datetime(f"{attendance_date} {shift_type.end_time}")
 
     logs.sort(key=lambda log: log.time)
 
