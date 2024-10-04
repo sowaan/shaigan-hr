@@ -141,6 +141,7 @@ def mark_attendance_and_link_log(
 
     att_status = ''
     q = ''
+    
     if penalties == 0 :
         att_status = 'Present'        
   
@@ -170,8 +171,6 @@ def mark_attendance_and_link_log(
         if att_status == 'Absent' or att_status == 'Quarter' :
             attendance_status = 'Absent'
 
-        # elif att_status == 'Half Day' :
-            # attendance_status = 'Half Day'  
 
         if attendance_status == 'Absent' and att_status != 'Quarter' :
             att_status = 'Absent'
@@ -180,6 +179,8 @@ def mark_attendance_and_link_log(
             frappe.db.savepoint("attendance_creation")
             attendance = frappe.new_doc("Attendance")
             if penalties > 0 :
+                if attendance_status == 'Half Day' :
+                    attendance_status = 'Absent'
                 attendance.update(
                     {
                         "doctype": "Attendance",
