@@ -5,7 +5,8 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import cint, get_datetime
-from frappe.utils import cint, get_datetime, datetime, time_diff_in_seconds
+from frappe.utils import cint, get_datetime, datetime, time_diff_in_seconds , add_days
+from datetime import datetime
 from hrms.hr.doctype.shift_assignment.shift_assignment import (
     get_actual_start_end_datetime_of_shift,
 )
@@ -237,9 +238,20 @@ def calculate_working_hours(logs, employee, attendance_date, shift_type, check_i
     outside_shift_seconds = 0
     last_in_time = None
 
-    # shift_type_doc = frappe.get_doc('Shift Type', shift_type)
     shift_start = get_datetime(f"{attendance_date} {shift_type.start_time}")
-    shift_end = get_datetime(f"{attendance_date} {shift_type.end_time}")
+
+    
+    start_time = datetime.strptime(shift_type.start_time, "%H:%M:%S").time()
+    end_time = datetime.strptime(shift_type.end_time, "%H:%M:%S").time()
+
+
+    if start_time < end_time :
+        shift_end = get_datetime(f"{attendance_date} {shift_type.end_time}")
+
+    else :
+        shift_end = get_datetime(f"{add_days(attendance_date, 1)} {shift_type.end_time}")
+
+
 
     logs.sort(key=lambda log: log.time)
 

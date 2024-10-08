@@ -4,7 +4,8 @@ from datetime import timedelta
 
 import frappe
 from frappe import _
-from frappe.utils import cint, get_datetime, datetime, time_diff_in_seconds
+from frappe.utils import cint, get_datetime, datetime, time_diff_in_seconds, add_days
+from datetime import datetime as py_datetime
 
 import frappe
 # from frappe.utils import get_datetime, timedelta
@@ -48,8 +49,25 @@ def calculate_ot_hours(logs, employee, attendance_date, shift_type):
     last_in_time = None
 
     shift_type_doc = frappe.get_doc('Shift Type', shift_type)
+
     shift_start = get_datetime(f"{attendance_date} {shift_type_doc.start_time}")
-    shift_end = get_datetime(f"{attendance_date} {shift_type_doc.end_time}")
+
+
+    if isinstance(shift_type_doc.start_time, str):
+        start_time = py_datetime.strptime(shift_type_doc.start_time, "%H:%M:%S").time()
+    else:
+        start_time = shift_type_doc.start_time
+
+    if isinstance(shift_type_doc.end_time, str):
+        end_time = py_datetime.strptime(shift_type_doc.end_time, "%H:%M:%S").time()
+    else:
+        end_time = shift_type_doc.end_time
+
+    if start_time < end_time :
+        shift_end = get_datetime(f"{attendance_date} {shift_type_doc.end_time}")
+    else :
+        shift_end = get_datetime(f"{add_days(attendance_date, 1)} {shift_type_doc.end_time}")
+
 
     logs.sort(key=lambda log: log.time)
 
