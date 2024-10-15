@@ -6,36 +6,6 @@ app_email = "sufyan.sadiq@sowaan.com"
 app_license = "mit"
 # required_apps = []
 
-
-fixtures = [
-    {
-      "doctype" : "Custom Field",
-      "filters" : [
-        [  
-          "fieldname" , "in" , (
-                               "custom_from_time", 
-                               "custom_to_time", 
-                               "custom_quarter_day",
-                               "custom_attendance_status",
-                               "custom_overtime_hours",
-                               "custom_quarter_leaves",
-                               "custom_system_generated",
-                               "custom_monthly_leave_scheduler",
-                               "custom_quarter"
-                                )
-	  	  
-        ]  
-      ]
-	},
-    
-
-
-
-]
-
-
-
-
 # Includes in <head>
 # ------------------
 
@@ -58,7 +28,9 @@ fixtures = [
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Leave Application" : "shaigan_hr/overrides/leave_application.js"}
+doctype_js = {
+    "Leave Application" : "shaigan_hr/overrides/leave_application.js"
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -145,11 +117,10 @@ doctype_js = {"Leave Application" : "shaigan_hr/overrides/leave_application.js"}
 # Override standard doctype classes
 
 override_doctype_class = {
-	"Leave Application": "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.QuarterLeaveApplication" ,
-  "Shift Type": "shaigan_hr.shaigan_hr.overrides.override_shift_type.OverrideShiftType" ,
-	"Attendance" : "shaigan_hr.shaigan_hr.overrides.override_attendance.OverrideAttendance" ,
-  "Employee Checkin" : "shaigan_hr.shaigan_hr.overrides.override_employee_checkin.OverrideEmployeeCheckin" ,
+	"Leave Application": "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.QuarterLeaveApplication",
+    "Payroll Entry": "shaigan_hr.shaigan_hr.overrides.payroll_entry.CustomPayrollEntry"
 }
+
 
 # Document Events
 # ---------------
@@ -260,3 +231,23 @@ override_whitelisted_methods = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+fixtures = [{
+    "doctype" : "Custom Field",
+    "filters" : [
+        [
+         "fieldname","in",(
+             "custom_bank","custom_territory","custom_city","custom_base_town"
+                           )   
+		]
+        ]
+},
+]
+
+
+# doctype_js = {"Payroll Entry" : "shaigan_hr/overrides/payroll_entry.js"}
+
+
+
+# override_doctype_class = {
+# 	"Payroll Entry": "shaigan_hr.shaigan_hr.overrides.payroll_entry.CustomPayrollEntry"
+# }
