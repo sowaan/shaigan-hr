@@ -99,6 +99,7 @@ def calculate_ot_hours(logs, employee, attendance_date, shift_type):
 
 
 def count_penalties(logs, employee, attendance_date, shift_type, working_hours) :
+    
     shift_type_doc = frappe.get_doc('Shift Type', shift_type)
     threshold_for_absent = shift_type_doc.required_hours - shift_type_doc.working_hours_threshold_for_half_day
     shift_start = get_datetime(f"{attendance_date} {shift_type_doc.start_time}")
@@ -135,12 +136,30 @@ def count_penalties(logs, employee, attendance_date, shift_type, working_hours) 
     # if filtered_logs:
         last_log = filtered_logs[-1]
 
-        if last_log.log_type == 'OUT':
-            absent_threshold_in_minutes = threshold_for_absent * 60
-            if last_log.time <= shift_end - timedelta(seconds=1) and last_log.time > shift_end - timedelta(minutes=absent_threshold_in_minutes) :
-                early = True
-        elif last_log.log_type == 'IN':
-            early = False
+
+        if shift_start < first_log.time and first_log.time <= shift_start + timedelta(minutes=15) :
+
+            late_minutes = (first_log.time - shift_start).total_seconds() / 60
+
+            
+            if last_log.log_type == 'OUT':
+                absent_threshold_in_minutes = threshold_for_absent * 60
+                absent_threshold_in_minutes = absent_threshold_in_minutes - late_minutes
+
+                if last_log.time <= shift_end - timedelta(seconds=1) and last_log.time > shift_end - timedelta(minutes=absent_threshold_in_minutes) :
+                    early = True
+            elif last_log.log_type == 'IN':
+                early = False
+
+
+
+        else :    
+            if last_log.log_type == 'OUT':
+                absent_threshold_in_minutes = threshold_for_absent * 60
+                if last_log.time <= shift_end - timedelta(seconds=1) and last_log.time > shift_end - timedelta(minutes=absent_threshold_in_minutes) :
+                    early = True
+            elif last_log.log_type == 'IN':
+                early = False
 
 
   
@@ -158,7 +177,7 @@ def count_penalties(logs, employee, attendance_date, shift_type, working_hours) 
                         if duration.total_seconds() / 3600 < threshold_for_absent:
                             penalties += 1
                     last_out_time = None
-    
+      
 
         if late == True :
             penalties = penalties + 1

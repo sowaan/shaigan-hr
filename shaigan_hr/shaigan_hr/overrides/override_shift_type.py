@@ -34,7 +34,6 @@ class OverrideShiftType(ShiftType):
 	@frappe.whitelist()
 	def process_auto_attendance(self):
         
-        # frappe.msgprint("me")
 		if (
 			not cint(self.enable_auto_attendance)
 			or not self.process_attendance_after
@@ -48,7 +47,6 @@ class OverrideShiftType(ShiftType):
 		for key, group in itertools.groupby(logs, key=lambda x: (x["employee"], x["shift_start"])):
 			single_shift_logs = list(group)
 			attendance_date = key[1].date()
-			# frappe.msgprint(str(attendance_date))
 			employee = key[0]
 
 			if not self.should_mark_attendance(employee, attendance_date):
@@ -62,6 +60,7 @@ class OverrideShiftType(ShiftType):
 				in_time,
 				out_time,
 			) = self.get_attendance(single_shift_logs , employee, attendance_date)
+
 
 		    
 			mark_attendance_and_link_log(
