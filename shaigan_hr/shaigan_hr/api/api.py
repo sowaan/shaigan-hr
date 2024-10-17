@@ -104,6 +104,11 @@ def count_penalties(logs, employee, attendance_date, shift_type, working_hours) 
     threshold_for_absent = shift_type_doc.required_hours - shift_type_doc.working_hours_threshold_for_half_day
     shift_start = get_datetime(f"{attendance_date} {shift_type_doc.start_time}")
     shift_end = get_datetime(f"{attendance_date} {shift_type_doc.end_time}")
+    grace_time = 0
+
+    if shift_type_doc.enable_late_entry_marking == 1 :
+        if shift_type_doc.late_entry_grace_period :
+            grace_time = shift_type_doc.late_entry_grace_period
 
     filtered_logs = [log for log in logs if shift_start <= log.time <= shift_end]
     
@@ -127,7 +132,7 @@ def count_penalties(logs, employee, attendance_date, shift_type, working_hours) 
         if first_log.log_type == 'IN':
             absent_threshold_in_minutes = threshold_for_absent * 60
             
-            if first_log.time > shift_start + timedelta(minutes=15) and first_log.time <= shift_start + timedelta(minutes=absent_threshold_in_minutes):
+            if first_log.time > shift_start + timedelta(minutes=grace_time) and first_log.time <= shift_start + timedelta(minutes=absent_threshold_in_minutes):
                 late = True
         elif first_log.log_type == 'OUT':
             late = False
@@ -137,7 +142,7 @@ def count_penalties(logs, employee, attendance_date, shift_type, working_hours) 
         last_log = filtered_logs[-1]
 
 
-        if shift_start < first_log.time and first_log.time <= shift_start + timedelta(minutes=15) :
+        if shift_start < first_log.time and first_log.time <= shift_start + timedelta(minutes=grace_time) :
 
             late_minutes = (first_log.time - shift_start).total_seconds() / 60
 
