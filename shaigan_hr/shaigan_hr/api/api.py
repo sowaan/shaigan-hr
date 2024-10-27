@@ -43,6 +43,7 @@ def calculate_ot_hours(logs, employee, attendance_date, shift_type):
     # total_working_hours = total_working_seconds / 3600
     # frappe.msgprint(f"Total Working Hours: {total_working_hours}")
 
+    # attendance_date = str(attendance_date)
     total_working_seconds = 0
     outside_shift_seconds = 0
     working_hours = 0
@@ -195,7 +196,7 @@ def count_penalties(logs, employee, attendance_date, shift_type, working_hours) 
 
     else :
         if shift_type_doc.required_hours > working_hours :
-            penalties = 4
+            penalties = 0
 
 
 

@@ -179,9 +179,8 @@ def mark_attendance_and_link_log(
         try:
             frappe.db.savepoint("attendance_creation")
             attendance = frappe.new_doc("Attendance")
-            if penalties > 0 :
-                if attendance_status == 'Half Day' :
-                    attendance_status = 'Absent'
+            if penalties > 2 :
+                attendance_status = 'Absent'
                 attendance.update(
                     {
                         "doctype": "Attendance",
@@ -200,7 +199,7 @@ def mark_attendance_and_link_log(
                     }
                 ).submit()
 
-            else :    
+            elif attendance_status == 'Absent' or attendance_status == 'Half Day' :    
                 attendance.update(
                     {
                         "doctype": "Attendance",
@@ -208,6 +207,25 @@ def mark_attendance_and_link_log(
                         "attendance_date": attendance_date,
                         "status": attendance_status,
                         "custom_attendance_status": att_status,
+                        "working_hours": working_hours,
+                        "custom_overtime_hours": ot_hrs,
+                        "shift": shift,
+                        "late_entry": late_entry,
+                        "early_exit": early_exit,
+                        "in_time": in_time,
+                        "out_time": out_time,
+                    }
+                ).submit()
+
+            elif attendance_status == 'Present' :   
+                attendance.update(
+                    {
+                        "doctype": "Attendance",
+                        "employee": employee,
+                        "attendance_date": attendance_date,
+                        "status": attendance_status,
+                        "custom_attendance_status": att_status,
+                        "custom_quarter": q,
                         "working_hours": working_hours,
                         "custom_overtime_hours": ot_hrs,
                         "shift": shift,
@@ -241,8 +259,8 @@ def calculate_working_hours(logs, employee, attendance_date, shift_type, check_i
     shift_start = get_datetime(f"{attendance_date} {shift_type.start_time}")
 
     
-    start_time = datetime.strptime(shift_type.start_time, "%H:%M:%S").time()
-    end_time = datetime.strptime(shift_type.end_time, "%H:%M:%S").time()
+    start_time = datetime.strptime(str(shift_type.start_time), "%H:%M:%S").time()
+    end_time = datetime.strptime(str(shift_type.end_time), "%H:%M:%S").time()
 
 
     if start_time < end_time :

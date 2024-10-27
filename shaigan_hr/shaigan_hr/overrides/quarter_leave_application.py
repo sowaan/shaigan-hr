@@ -150,28 +150,58 @@ class QuarterLeaveApplication(LeaveApplication):
 							})
 			if att_list :
 				att_doc = frappe.get_doc('Attendance',att_list[0].name)
-				if att_doc.status not in ['Present','Half Day'] :
-					frappe.throw("The employee is either 'Absent' , 'On Leave' or 'Works From Home'.")
-				elif att_doc.custom_attendance_status not in ['3 Quarters','Half Day'] :
-					frappe.throw("Employee has worked below or equal to 1 Quarter.You can not approved Quarter Leave for this date.")
-				else :
-					if self.custom_system_generated != 1 :
-						att_doc.append('custom_quarter_leaves', {
-							'leave_application': self.name,
-							'leave_type': self.leave_type,
-							'from_time': self.custom_from_time,
-							'to_time': self.custom_to_time,
-						})
-						att_doc.save()
+				# if att_doc.status not in ['Present'] :
+				# 	frappe.throw("The employee is either 'Absent' , 'On Leave' or 'Works From Home' or 'Half Day'.")
+				# elif att_doc.custom_attendance_status not in ['3 Quarters','Half Day'] :
+				# 	frappe.throw("Employee has worked below or equal to 1 Quarter.You can not approved Quarter Leave for this date.")
+				# else :
+				if att_doc.status == 'Present' and att_doc.custom_quarter in ['ONE','TWO'] :
+
+
+					table_length = len(att_doc.custom_quarter_leaves)
+					if table_length == 0 :
+						if self.custom_system_generated != 1 :
+							att_doc.append('custom_quarter_leaves', {
+								'leave_application': self.name,
+								'leave_type': self.leave_type,
+								'from_time': self.custom_from_time,
+								'to_time': self.custom_to_time,
+							})
+							att_doc.save()
+						else :
+							att_doc.append('custom_quarter_leaves', {
+								'leave_application': self.name,
+								'leave_type': self.leave_type,
+								'from_time': '',
+								'to_time': '',
+								'system_generated': 1,
+							})
+							att_doc.save()
+
+					elif table_length == 1 and att_doc.custom_quarter == 'TWO' :
+						if self.custom_system_generated != 1 :
+							att_doc.append('custom_quarter_leaves', {
+								'leave_application': self.name,
+								'leave_type': self.leave_type,
+								'from_time': self.custom_from_time,
+								'to_time': self.custom_to_time,
+							})
+							att_doc.save()
+						else :
+							att_doc.append('custom_quarter_leaves', {
+								'leave_application': self.name,
+								'leave_type': self.leave_type,
+								'from_time': '',
+								'to_time': '',
+								'system_generated': 1,
+							})
+							att_doc.save()
+
 					else :
-						att_doc.append('custom_quarter_leaves', {
-							'leave_application': self.name,
-							'leave_type': self.leave_type,
-							'from_time': '',
-							'to_time': '',
-							'system_generated': 1,
-						})
-						att_doc.save()
+						frappe.throw("As per attendance record, this 'Quarter' leave is not required for today's date.")	
+						
+
+
 
 
 
@@ -467,6 +497,7 @@ class QuarterLeaveApplication(LeaveApplication):
 				self.leave_type,
 				self.from_date,
 				self.to_date,
+				self.custom_quarter_day,
 				self.half_day,
 				self.half_day_date,
 			)
@@ -532,12 +563,13 @@ class QuarterLeaveApplication(LeaveApplication):
 			from `tabLeave Application`
 			where employee = %(employee)s and docstatus < 2 and status in ('Open', 'Approved')
 			and to_date >= %(from_date)s and from_date <= %(to_date)s
-			and name != %(name)s""",
+			and name != %(name)s and custom_quarter_day != 1""",
 			{
 				"employee": self.employee,
 				"from_date": self.from_date,
 				"to_date": self.to_date,
 				"name": self.name,
+				"custom_quarter_day": self.custom_quarter_day,
 			},
 			as_dict=1,
 		):
@@ -842,6 +874,7 @@ class QuarterLeaveApplication(LeaveApplication):
 			self.leave_type,
 			self.from_date,
 			first_alloc_end,
+			self.custom_quarter_day,
 			self.half_day,
 			self.half_day_date,
 		)
@@ -849,6 +882,7 @@ class QuarterLeaveApplication(LeaveApplication):
 			self.employee,
 			self.leave_type,
 			second_alloc_start,
+			self.custom_quarter_day,
 			self.to_date,
 			self.half_day,
 			self.half_day_date,
@@ -876,7 +910,7 @@ class QuarterLeaveApplication(LeaveApplication):
 		raise_exception = False if frappe.flags.in_patch else True
 
 		leaves = get_number_of_leave_day(
-			self.employee, self.leave_type, self.from_date, expiry_date, self.half_day, self.half_day_date
+			self.employee, self.leave_type, self.from_date, expiry_date, self.custom_quarter_day, self.half_day, self.half_day_date
 		)
 
 		if leaves:
@@ -893,7 +927,7 @@ class QuarterLeaveApplication(LeaveApplication):
 		if getdate(expiry_date) != getdate(self.to_date):
 			start_date = add_days(expiry_date, 1)
 			leaves = get_number_of_leave_day(
-				self.employee, self.leave_type, start_date, self.to_date, self.half_day, self.half_day_date
+				self.employee, self.leave_type, start_date, self.to_date, self.half_day, self.custom_quarter_day, self.half_day_date
 			)
 
 			if leaves:
@@ -929,6 +963,7 @@ def get_number_of_leave_day(
 	leave_type: str,
 	from_date: datetime.date,
 	to_date: datetime.date,
+	quarter_day: int | str | None = None,
 	half_day: int | str | None = None,
 	half_day_date: datetime.date | str | None = None,
 	holiday_list: str | None = None,
@@ -949,12 +984,15 @@ def get_number_of_leave_day(
 							#    "holiday_list" : holiday_list,
 							   "docstatus" : 1
 						   })
-	if la_list :
-		la_doc = frappe.get_doc("Leave Application",la_list[0].name)
+	# if la_list :
+	# 	la_doc = frappe.get_doc("Leave Application",la_list[0].name)
 	
-		if la_doc.total_leave_days == 0.25 :
-			number_of_days = 0.25
-			signal = 1
+	# 	if la_doc.custom_quarter_day == 1 :
+	# 		number_of_days = 0.25
+	# 		signal = 1
+	if cint(quarter_day) == 1 :
+		number_of_days = 0.25
+		signal = 1
 
 	if signal == 0 :	
 		if cint(half_day) == 1:

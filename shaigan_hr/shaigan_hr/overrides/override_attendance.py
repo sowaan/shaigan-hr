@@ -57,7 +57,7 @@ class OverrideAttendance(Attendance):
 
     # Sufyan created this Function
 	def before_submit(self) :
-		if self.status in ['Present', 'Half Day'] and self.custom_attendance_status not in ['Absent', 'Quarter']:
+		if self.status == 'Present' and self.custom_quarter in ['ONE', 'TWO']:
 			q_l_list = frappe.get_list("Leave Application",
 								filters={
 									'employee': self.employee,
@@ -67,7 +67,9 @@ class OverrideAttendance(Attendance):
 									'docstatus': 1,
 								})
 			if q_l_list :
+				x = 0
 				for q_l in q_l_list:
+					x = x + 1
 					q_l_doc = frappe.get_doc("Leave Application", q_l.name)
 					self.append('custom_quarter_leaves', {
 						'leave_application': q_l_doc.name,
@@ -75,7 +77,14 @@ class OverrideAttendance(Attendance):
 						'from_time': q_l_doc.custom_from_time,
 						'to_time': q_l_doc.custom_to_time,
 						'system_generated' : q_l_doc.custom_system_generated ,
-					})					
+					})
+					if self.custom_quarter == 'ONE' :
+						break
+						
+					if self.custom_quarter == 'TWO' and x == 2 :
+						break
+
+
 
 	def validate_attendance_date(self):
 		date_of_joining = frappe.db.get_value("Employee", self.employee, "date_of_joining")

@@ -60,78 +60,6 @@ def create_system_generated_half_leaves(att_doc, leave_type, sch_doc):
 	la_doc.submit()
 
 
-def check_and_create_full_and_half_leaves(doc):
-	emp_list = frappe.get_list("Employee", filters={'status': 'Active'})
-
-	# frappe.msgprint("hello")
-	if emp_list:
-
-		for emp in emp_list:
-			att_list = frappe.get_list("Attendance",
-									   filters={
-										   'employee': emp.name,
-										   'attendance_date': ['Between', [doc.from_date, doc.to_date]],
-										#    'status': ['in', ['Absent', 'Half Day']],
-										   'status' : 'Absent' ,
-										   'docstatus': 1,
-									   },
-									   order_by='attendance_date')
-
-			if att_list:
-				for att in att_list:
-					att_doc = frappe.get_doc("Attendance", att.name)
-					# if att_doc.status == 'Absent':
-
-						# frappe.msgprint("hello")
-					# frappe.msgprint(str(att_doc.name))	
-
-					leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
-					leave_details = leave_details_list["leave_allocation"]
-
-					leave_type = "Leave Without Pay"
-					if leave_details:
-						if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 1:
-							leave_type = "Casual Leave"
-						elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 1:
-							leave_type = "Sick Leave"
-						else:
-							leave_type = "Leave Without Pay"
-
-					create_system_generated_full_leaves(att_doc, leave_type, doc)
-
-
-			half_att_list = frappe.get_list("Attendance",
-									   filters={
-										   'employee': emp.name,
-										   'attendance_date': ['Between', [doc.from_date, doc.to_date]],
-										#    'status': ['in', ['Absent', 'Half Day']],
-										   'status' : 'Half Day' ,
-										   'custom_quarter' : ['not in',['ONE','TWO']] ,
-										   'docstatus': 1,
-									   },
-									   order_by='attendance_date')
-
-
-					# elif att_doc.status == 'Half Day':
-			if half_att_list :
-				for att in half_att_list:
-					att_doc = frappe.get_doc("Attendance", att.name)
-					if not att_doc.leave_application:
-
-						leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
-						leave_details = leave_details_list["leave_allocation"]
-
-						leave_type = "Leave Without Pay"
-						if leave_details:
-							if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 0.5:
-								leave_type = "Casual Leave"
-							elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.5:
-								leave_type = "Sick Leave"
-							else:
-								leave_type = "Leave Without Pay"
-
-						create_system_generated_half_leaves(att_doc, leave_type, doc)
-
 
 def check_and_create_quarter_leaves(doc):
 	emp_list = frappe.get_list("Employee", filters={'status': 'Active'})
@@ -142,9 +70,8 @@ def check_and_create_quarter_leaves(doc):
 									   filters={
 										   'employee': emp.name,
 										   'attendance_date': ['Between', [doc.from_date, doc.to_date]],
-										#    'custom_attendance_status': ['in', ['3 Quarters', 'Half Day']],
-										   'status' : ['not in',['Absent','On Leave']] ,
-										   'custom_quarter' : ['in', ['ONE','TWO']] , 
+										   'status' : 'Present' ,
+										   'custom_quarter' : ['in', ['ONE','TWO']] ,
 										   'docstatus': 1,
 									   },
 									   order_by='attendance_date')
@@ -184,6 +111,79 @@ def check_and_create_quarter_leaves(doc):
 							create_system_generated_quarter_leaves(att_doc, leave_type, doc)
 
 
+
+def check_and_create_full_and_half_leaves(doc):
+	emp_list = frappe.get_list("Employee", filters={'status': 'Active'})
+
+	if emp_list:
+
+		for emp in emp_list:
+			att_list = frappe.get_list("Attendance",
+									   filters={
+										   'employee': emp.name,
+										   'attendance_date': ['Between', [doc.from_date, doc.to_date]],
+										   'status' : 'Absent' ,
+										   'docstatus': 1,
+									   },
+									   order_by='attendance_date')
+
+			if att_list:
+				for att in att_list:
+					att_doc = frappe.get_doc("Attendance", att.name)	
+
+					leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
+					leave_details = leave_details_list["leave_allocation"]
+
+					leave_type = "Leave Without Pay"
+					if leave_details:
+						if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 1:
+							leave_type = "Casual Leave"
+						elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 1:
+							leave_type = "Sick Leave"
+						else:
+							leave_type = "Leave Without Pay"
+
+					create_system_generated_full_leaves(att_doc, leave_type, doc)
+
+
+			half_att_list = frappe.get_list("Attendance",
+									   filters={
+										   'employee': emp.name,
+										   'attendance_date': ['Between', [doc.from_date, doc.to_date]],
+										   'status' : 'Half Day' ,
+										   'docstatus': 1,
+									   },
+									   order_by='attendance_date')
+
+
+					# elif att_doc.status == 'Half Day':
+			if half_att_list :
+				for att in half_att_list:
+					att_doc = frappe.get_doc("Attendance", att.name)
+					if not att_doc.leave_application:
+
+						leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
+						leave_details = leave_details_list["leave_allocation"]
+
+						leave_type = "Leave Without Pay"
+						if leave_details:
+							if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 0.5:
+								leave_type = "Casual Leave"
+							elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.5:
+								leave_type = "Sick Leave"
+							else:
+								leave_type = "Leave Without Pay"
+
+						create_system_generated_half_leaves(att_doc, leave_type, doc)
+
+	check_and_create_quarter_leaves(doc)				
+
+
+
+
+
+
+
 class MonthlyLeaveScheduler(Document):
 
 	def before_save(self):
@@ -191,8 +191,11 @@ class MonthlyLeaveScheduler(Document):
 			frappe.throw("'To Date' must be greater than 'From Date'.")
 
 	def before_submit(self):
-		check_and_create_full_and_half_leaves(self)
-		check_and_create_quarter_leaves(self)
+		doc_name = self
+		enqueue(check_and_create_full_and_half_leaves , doc = self, queue = "long")
+		
+		
+
 
 
 
