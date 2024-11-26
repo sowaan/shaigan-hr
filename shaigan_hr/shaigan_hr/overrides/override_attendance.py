@@ -84,6 +84,26 @@ class OverrideAttendance(Attendance):
 					if self.custom_quarter == 'TWO' and x == 2 :
 						break
 
+		holiday_list_doc = None
+
+		if self.shift :
+			holiday_list_name = frappe.db.get_value('Shift Type' , self.shift , 'holiday_list')
+			if holiday_list_name :
+				holiday_list_doc = frappe.get_doc('Holiday List' , holiday_list_name)
+				
+				
+		if not holiday_list_doc :
+			holiday_list_name = frappe.db.get_value('Employee' , self.employee , 'holiday_list')
+			if holiday_list_name :
+				holiday_list_doc = frappe.get_doc('Holiday List' , holiday_list_name)
+				
+
+		if holiday_list_doc :
+			for holiday in holiday_list_doc.holidays :
+				if str(holiday.holiday_date) == str(self.attendance_date) :
+					self.custom_holiday = 1
+					break			
+
 
 
 	def validate_attendance_date(self):

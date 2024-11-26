@@ -21,7 +21,8 @@ fixtures = [
                                "custom_quarter_leaves",
                                "custom_system_generated",
                                "custom_monthly_leave_scheduler",
-                               "custom_quarter"
+                               "custom_quarter",
+                               "custom_holiday"
                                 )
 	  	  
         ]  

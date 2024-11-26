@@ -26,38 +26,69 @@ def create_system_generated_quarter_leaves(att_doc, leave_type, sch_doc):
 
 
 def create_system_generated_full_leaves(att_doc, leave_type, sch_doc):
-	la_doc = frappe.get_doc({
-		"doctype": "Leave Application",
-		"employee": att_doc.employee,
-		"leave_type": leave_type,
-		"from_date": att_doc.attendance_date,
-		"to_date": att_doc.attendance_date,
-		"custom_system_generated": 1,
-		"custom_monthly_leave_scheduler": sch_doc.name,
-		"total_leave_days": 1,
-		"status": "Approved",
-		"docstatus": 0,
-	})
-	la_doc.insert()
-	la_doc.submit()
+
+	leave_exists = frappe.db.sql("""
+		SELECT name
+		FROM `tabLeave Application`
+		WHERE
+			employee = %(employee)s
+			AND (
+				(from_date <= %(attendance_date)s AND to_date >= %(attendance_date)s)
+			)
+			AND docstatus != 2
+		""",
+		{ "employee": att_doc.employee, "attendance_date": att_doc.attendance_date }
+	)
+
+	if not leave_exists :
+		la_doc = frappe.get_doc({
+			"doctype": "Leave Application",
+			"employee": att_doc.employee,
+			"leave_type": leave_type,
+			"from_date": att_doc.attendance_date,
+			"to_date": att_doc.attendance_date,
+			"custom_system_generated": 1,
+			"custom_monthly_leave_scheduler": sch_doc.name,
+			"total_leave_days": 1,
+			"status": "Approved",
+			"docstatus": 0,
+		})
+		la_doc.insert()
+		la_doc.submit()
 
 
 def create_system_generated_half_leaves(att_doc, leave_type, sch_doc):
-	la_doc = frappe.get_doc({
-		"doctype": "Leave Application",
-		"employee": att_doc.employee,
-		"leave_type": leave_type,
-		"from_date": att_doc.attendance_date,
-		"to_date": att_doc.attendance_date,
-		"custom_system_generated": 1,
-		"custom_monthly_leave_scheduler": sch_doc.name,
-		"half_day": 1,
-		"total_leave_days": 0.5,
-		"status": "Approved",
-		"docstatus": 0,
-	})
-	la_doc.insert()
-	la_doc.submit()
+
+
+	leave_exists = frappe.db.sql("""
+		SELECT name
+		FROM `tabLeave Application`
+		WHERE
+			employee = %(employee)s
+			AND (
+				(from_date <= %(attendance_date)s AND to_date >= %(attendance_date)s)
+			)
+			AND docstatus != 2
+		""",
+		{ "employee": att_doc.employee, "attendance_date": att_doc.attendance_date }
+	)
+
+	if not leave_exists :
+		la_doc = frappe.get_doc({
+			"doctype": "Leave Application",
+			"employee": att_doc.employee,
+			"leave_type": leave_type,
+			"from_date": att_doc.attendance_date,
+			"to_date": att_doc.attendance_date,
+			"custom_system_generated": 1,
+			"custom_monthly_leave_scheduler": sch_doc.name,
+			"half_day": 1,
+			"total_leave_days": 0.5,
+			"status": "Approved",
+			"docstatus": 0,
+		})
+		la_doc.insert()
+		la_doc.submit()
 
 
 
@@ -73,8 +104,15 @@ def check_and_create_quarter_leaves(doc):
 										   'status' : 'Present' ,
 										   'custom_quarter' : ['in', ['ONE','TWO']] ,
 										   'docstatus': 1,
+										   'custom_holiday' : ['!=' , 1] ,
 									   },
 									   order_by='attendance_date')
+
+
+			frappe.msgprint(str(emp_list))
+			if emp.name == 'SPPL-4514' :
+
+				frappe.msgprint(str(att_list))	
 
 			if att_list:
 				for att in att_list:
@@ -114,6 +152,7 @@ def check_and_create_quarter_leaves(doc):
 
 def check_and_create_full_and_half_leaves(doc):
 	emp_list = frappe.get_list("Employee", filters={'status': 'Active'})
+	frappe.msgprint(str(emp_list))
 
 	if emp_list:
 
@@ -124,9 +163,10 @@ def check_and_create_full_and_half_leaves(doc):
 										   'attendance_date': ['Between', [doc.from_date, doc.to_date]],
 										   'status' : 'Absent' ,
 										   'docstatus': 1,
+										   'custom_holiday' : ['!=' , 1] ,
 									   },
 									   order_by='attendance_date')
-
+				   
 			if att_list:
 				for att in att_list:
 					att_doc = frappe.get_doc("Attendance", att.name)	
@@ -152,6 +192,7 @@ def check_and_create_full_and_half_leaves(doc):
 										   'attendance_date': ['Between', [doc.from_date, doc.to_date]],
 										   'status' : 'Half Day' ,
 										   'docstatus': 1,
+										   'custom_holiday' : ['!=' , 1] ,
 									   },
 									   order_by='attendance_date')
 
