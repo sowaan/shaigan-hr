@@ -1270,11 +1270,9 @@ def get_leaves_for_period(
 				leave_entry.to_date = to_date
 
 			half_day = 0
+			quarter_day = 0
 			half_day_date = None
 			# fetch half day date for leaves with half days
-
-
-
 
 
 			if leave_entry.leaves % 1:
@@ -1282,12 +1280,18 @@ def get_leaves_for_period(
 				half_day_date = frappe.db.get_value(
 				"Leave Application", leave_entry.transaction_name, "half_day_date"
 				)
+			if leave_entry.leaves == 0.25 or leave_entry.leaves == -0.25 :
+				quarter_day = 1
+				half_day = 0
+				half_day_date = None
+
 			leave_days += (
 				get_number_of_leave_day(
 					employee,
 					leave_type,
 					leave_entry.from_date,
 					leave_entry.to_date,
+					quarter_day,
 					half_day,
 					half_day_date,
 					holiday_list=leave_entry.holiday_list,
