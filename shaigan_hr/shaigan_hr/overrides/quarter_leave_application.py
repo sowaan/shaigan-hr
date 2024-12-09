@@ -882,8 +882,8 @@ class QuarterLeaveApplication(LeaveApplication):
 			self.employee,
 			self.leave_type,
 			second_alloc_start,
-			self.custom_quarter_day,
 			self.to_date,
+			self.custom_quarter_day,
 			self.half_day,
 			self.half_day_date,
 		)
@@ -927,7 +927,7 @@ class QuarterLeaveApplication(LeaveApplication):
 		if getdate(expiry_date) != getdate(self.to_date):
 			start_date = add_days(expiry_date, 1)
 			leaves = get_number_of_leave_day(
-				self.employee, self.leave_type, start_date, self.to_date, self.half_day, self.custom_quarter_day, self.half_day_date
+				self.employee, self.leave_type, start_date, self.to_date, self.custom_quarter_day, self.half_day, self.half_day_date
 			)
 
 			if leaves:
