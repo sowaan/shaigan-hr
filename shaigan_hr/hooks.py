@@ -6,6 +6,37 @@ app_email = "sufyan.sadiq@sowaan.com"
 app_license = "mit"
 # required_apps = []
 
+
+fixtures = [
+    {
+      "doctype" : "Custom Field",
+      "filters" : [
+        [  
+          "fieldname" , "in" , (
+                               "custom_from_time", 
+                               "custom_to_time", 
+                               "custom_quarter_day",
+                               "custom_attendance_status",
+                               "custom_overtime_hours",
+                               "custom_quarter_leaves",
+                               "custom_system_generated",
+                               "custom_monthly_leave_scheduler",
+                               "custom_quarter",
+                               "custom_holiday"
+                                )
+	  	  
+        ]  
+      ]
+	},
+    
+
+
+
+]
+
+
+
+
 # Includes in <head>
 # ------------------
 
@@ -115,7 +146,10 @@ doctype_js = {"Leave Application" : "shaigan_hr/overrides/leave_application.js"}
 # Override standard doctype classes
 
 override_doctype_class = {
-	"Leave Application": "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.QuarterLeaveApplication"
+	"Leave Application": "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.QuarterLeaveApplication" ,
+  "Shift Type": "shaigan_hr.shaigan_hr.overrides.override_shift_type.OverrideShiftType" ,
+	"Attendance" : "shaigan_hr.shaigan_hr.overrides.override_attendance.OverrideAttendance" ,
+  "Employee Checkin" : "shaigan_hr.shaigan_hr.overrides.override_employee_checkin.OverrideEmployeeCheckin" ,
 }
 
 # Document Events
