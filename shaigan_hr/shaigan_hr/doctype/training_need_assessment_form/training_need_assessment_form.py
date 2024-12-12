@@ -20,5 +20,5 @@ class TrainingNeedAssessmentForm(Document):
 					self.qualification = q.qualification
 					break
 			self.date_of_joining = employee_doc.date_of_joining
-			self.gender = employee_doc.employee_name
+			self.gender = employee_doc.gender
 			
