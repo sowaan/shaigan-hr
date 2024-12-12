@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-11 18:11:49.191308",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "soft_skills",
+  "is_this_soft_skill_required_for_job",
+  "skill_ratting",
+  "training_required"
+ ],
+ "fields": [
+  {
+   "fieldname": "soft_skills",
+   "fieldtype": "Select",
+   "label": "Soft Skills",
+   "options": "\nCommunication Skill\nStress Management\nTime Management\nProblem Solving\nEmotional Intelligence\nConflict Management\nInterpersonal Skills\nLeadership Skills"
+  },
+  {
+   "fieldname": "is_this_soft_skill_required_for_job",
+   "fieldtype": "Select",
+   "label": "Is This Soft Skill Required For Job",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "skill_ratting",
+   "fieldtype": "Select",
+   "label": "Skill Ratting",
+   "options": "\nMeet Requirement\nAverage\nNeed Improvement"
+  },
+  {
+   "fieldname": "training_required",
+   "fieldtype": "Select",
+   "label": "Training Required",
+   "options": "\nYes\nNo"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-12-11 18:19:51.077193",
+ "modified_by": "Administrator",
+ "module": "Shaigan HR",
+ "name": "Domain B2 Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

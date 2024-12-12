@@ -1,0 +1,36 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-11 17:49:52.635589",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "job_duty",
+  "details"
+ ],
+ "fields": [
+  {
+   "fieldname": "job_duty",
+   "fieldtype": "Data",
+   "label": "Job Duty"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Data",
+   "label": "Details"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-12-11 17:52:26.349261",
+ "modified_by": "Administrator",
+ "module": "Shaigan HR",
+ "name": "Essential Functions Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

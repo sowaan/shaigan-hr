@@ -1,0 +1,54 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-11 17:56:26.219461",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "job_duty",
+  "techical_skill_required_to_perform_job",
+  "current_skill_level",
+  "required_skill",
+  "gap_identified"
+ ],
+ "fields": [
+  {
+   "fieldname": "job_duty",
+   "fieldtype": "Data",
+   "label": "Job Duty"
+  },
+  {
+   "fieldname": "techical_skill_required_to_perform_job",
+   "fieldtype": "Data",
+   "label": "Techical Skill Required to Perform Job"
+  },
+  {
+   "fieldname": "current_skill_level",
+   "fieldtype": "Rating",
+   "label": "Current Skill Level"
+  },
+  {
+   "fieldname": "required_skill",
+   "fieldtype": "Data",
+   "label": "Required Skill"
+  },
+  {
+   "fieldname": "gap_identified",
+   "fieldtype": "Data",
+   "label": "Gap Identified"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-12-11 17:59:12.231073",
+ "modified_by": "Administrator",
+ "module": "Shaigan HR",
+ "name": "Domain A Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
