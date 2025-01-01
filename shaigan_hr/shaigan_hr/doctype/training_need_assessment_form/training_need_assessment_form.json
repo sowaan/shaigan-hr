@@ -1,0 +1,190 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-11 17:44:32.654929",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_hxgf",
+  "employee_id",
+  "amended_from",
+  "designation",
+  "qualification",
+  "gender",
+  "column_break_bruo",
+  "employee_name",
+  "department",
+  "date_of_joining",
+  "saved",
+  "essential_functions_section",
+  "description",
+  "job_duty_details",
+  "domain_a_technical_knowledge_skills_and_abilities_section",
+  "domain_a_description",
+  "domain_a_table",
+  "domain_b_core_values_of_shaigan_section",
+  "domain_b_description",
+  "domain_b_table",
+  "domain_b_soft_sklils_section",
+  "domain_b2_description",
+  "domain_b2_table"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_hxgf",
+   "fieldtype": "Section Break",
+   "label": "Personal Information"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Training Need Assessment Form",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "employee_id",
+   "fieldtype": "Link",
+   "label": "Employee Id",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Link",
+   "label": "Designation",
+   "options": "Designation"
+  },
+  {
+   "fieldname": "qualification",
+   "fieldtype": "Data",
+   "label": "Qualification"
+  },
+  {
+   "fieldname": "gender",
+   "fieldtype": "Link",
+   "label": "Gender",
+   "options": "Gender"
+  },
+  {
+   "fieldname": "column_break_bruo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "date_of_joining",
+   "fieldtype": "Date",
+   "label": "Date Of Joining"
+  },
+  {
+   "fieldname": "essential_functions_section",
+   "fieldtype": "Section Break",
+   "label": "Essential Functions"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "fieldname": "job_duty_details",
+   "fieldtype": "Table",
+   "label": "Job Duty Details",
+   "options": "Essential Functions Table"
+  },
+  {
+   "fieldname": "domain_a_technical_knowledge_skills_and_abilities_section",
+   "fieldtype": "Section Break",
+   "label": "Domain A Technical Knowledge Skills And Abilities"
+  },
+  {
+   "fieldname": "domain_a_description",
+   "fieldtype": "Small Text",
+   "label": "Domain A Description"
+  },
+  {
+   "fieldname": "domain_a_table",
+   "fieldtype": "Table",
+   "label": "Domain A Table",
+   "options": "Domain A Table"
+  },
+  {
+   "fieldname": "domain_b_core_values_of_shaigan_section",
+   "fieldtype": "Section Break",
+   "label": "Domain B Core Values Of Shaigan"
+  },
+  {
+   "fieldname": "domain_b_description",
+   "fieldtype": "Small Text",
+   "label": "Domain B1 Description"
+  },
+  {
+   "fieldname": "domain_b_table",
+   "fieldtype": "Table",
+   "label": "Domain B1 Table",
+   "options": "Domain B Table"
+  },
+  {
+   "fieldname": "domain_b_soft_sklils_section",
+   "fieldtype": "Section Break",
+   "label": "Domain B Soft Sklils"
+  },
+  {
+   "fieldname": "domain_b2_description",
+   "fieldtype": "Small Text",
+   "label": "Domain B2 Description"
+  },
+  {
+   "fieldname": "domain_b2_table",
+   "fieldtype": "Table",
+   "label": "Domain B2 Table",
+   "options": "Domain B2 Table"
+  },
+  {
+   "default": "0",
+   "fieldname": "saved",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Saved",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-12-11 18:21:30.839738",
+ "modified_by": "Administrator",
+ "module": "Shaigan HR",
+ "name": "Training Need Assessment Form",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

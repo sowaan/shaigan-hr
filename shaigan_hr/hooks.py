@@ -22,20 +22,33 @@ fixtures = [
                                "custom_system_generated",
                                "custom_monthly_leave_scheduler",
                                "custom_quarter",
-                               "custom_holiday"
+                               "custom_holiday",
+                               "custom_is_allowance"
                                 )
 	  	  
         ]  
       ]
 	},
     
+  {
+        
+       "doctype" : "Print Format",
+      "filters" : [
+        [  
+          "name" , "=" , "Reconciliation Report Print"
+]
+      ]
 
+
+
+    }
 
 
 ]
 
 
-
+ 
+    
 
 # Includes in <head>
 # ------------------

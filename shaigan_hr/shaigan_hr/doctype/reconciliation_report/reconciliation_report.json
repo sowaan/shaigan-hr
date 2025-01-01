@@ -1,0 +1,209 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-06 16:41:00.530850",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_ume0",
+  "amended_from",
+  "start_date",
+  "employee",
+  "salary_paid_last_month",
+  "column_break_htvb",
+  "end_date",
+  "salary_paid_current_month",
+  "total_difference",
+  "joiners_section",
+  "table_qase",
+  "leavers_section",
+  "leavers",
+  "arrears_section",
+  "arrears",
+  "increment__incentives_section",
+  "table_robb",
+  "allowances_section",
+  "allowances",
+  "allowances_cancelled_section",
+  "allowances_cancelled",
+  "less_paid_last_month_section",
+  "less_paid_last_month",
+  "excess_paid_last_month_section",
+  "excess_paid_month"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_ume0",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Reconciliation Report",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_htvb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "End Date",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "joiners_section",
+   "fieldtype": "Section Break",
+   "label": "Joiners"
+  },
+  {
+   "fieldname": "table_qase",
+   "fieldtype": "Table",
+   "options": "Reconciliation Report Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "leavers_section",
+   "fieldtype": "Section Break",
+   "label": "Leavers"
+  },
+  {
+   "fieldname": "leavers",
+   "fieldtype": "Table",
+   "label": "Leavers",
+   "options": "Leavers Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "arrears_section",
+   "fieldtype": "Section Break",
+   "label": "Arrears"
+  },
+  {
+   "fieldname": "arrears",
+   "fieldtype": "Table",
+   "label": "Arrears",
+   "options": "Reconciliation Report Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "increment__incentives_section",
+   "fieldtype": "Section Break",
+   "label": "Increment / Incentives"
+  },
+  {
+   "fieldname": "table_robb",
+   "fieldtype": "Table",
+   "options": "Increment Incentives Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "allowances_section",
+   "fieldtype": "Section Break",
+   "label": "Allowances"
+  },
+  {
+   "fieldname": "allowances",
+   "fieldtype": "Table",
+   "label": "Allowances",
+   "options": "Rec Allowances Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "allowances_cancelled_section",
+   "fieldtype": "Section Break",
+   "label": "Allowances Cancelled"
+  },
+  {
+   "fieldname": "allowances_cancelled",
+   "fieldtype": "Table",
+   "label": "Allowances Cancelled",
+   "options": "Rec Allowances Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "less_paid_last_month_section",
+   "fieldtype": "Section Break",
+   "label": "Less Paid Last Month"
+  },
+  {
+   "fieldname": "less_paid_last_month",
+   "fieldtype": "Table",
+   "label": "Less Paid Last Month",
+   "options": "Reconciliation Report Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "excess_paid_last_month_section",
+   "fieldtype": "Section Break",
+   "label": "Excess Paid Last Month"
+  },
+  {
+   "fieldname": "excess_paid_month",
+   "fieldtype": "Table",
+   "label": "Excess Paid Month",
+   "options": "Reconciliation Report Table"
+  },
+  {
+   "fieldname": "salary_paid_last_month",
+   "fieldtype": "Float",
+   "label": "Salary Paid Last Month"
+  },
+  {
+   "fieldname": "salary_paid_current_month",
+   "fieldtype": "Float",
+   "label": "Salary Paid Current Month"
+  },
+  {
+   "fieldname": "total_difference",
+   "fieldtype": "Float",
+   "label": "Total Difference"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-12-10 12:51:07.500520",
+ "modified_by": "Administrator",
+ "module": "Shaigan HR",
+ "name": "Reconciliation Report",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
