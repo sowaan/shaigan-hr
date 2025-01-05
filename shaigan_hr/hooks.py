@@ -140,6 +140,8 @@ override_doctype_class = {
 	"Attendance" : "shaigan_hr.shaigan_hr.overrides.override_attendance.OverrideAttendance" ,
   "Employee Checkin" : "shaigan_hr.shaigan_hr.overrides.override_employee_checkin.OverrideEmployeeCheckin" ,
   "Salary Slip" : "shaigan_hr.shaigan_hr.overrides.override_salary_slip.OverrideSalarySlip" ,
+  "Employee Increment" : "shaigan_hr.shaigan_hr.overrides.override_employee_increment.OverrideEmployeeIncrement",
+  "Arrears Process" : "shaigan_hr.shaigan_hr.overrides.override_arrears_process.OverrideArrearsProcess",
 }
 
 # Document Events
