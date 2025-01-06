@@ -35,10 +35,10 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			})
 
 		if salary_slip:
-			# last_salary_slip = frappe.get_doc("Salary Slip", salary_slip)
+			last_salary_slip = frappe.get_doc("Salary Slip", salary_slip)
 			
-			start_date = frappe.db.get_value("Salary Slip", last_salary_slip.name, "start_date")
-			end_date = frappe.db.get_value("Salary Slip", last_salary_slip.name, "end_date")
+			start_date = frappe.db.get_value("Salary Slip", salary_slip, "start_date")
+			end_date = frappe.db.get_value("Salary Slip", salary_slip, "end_date")
 
 			last_salary_slip = frappe.get_doc({
 				"doctype": 'Salary Slip',

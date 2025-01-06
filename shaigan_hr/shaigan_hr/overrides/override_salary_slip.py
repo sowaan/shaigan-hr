@@ -240,18 +240,81 @@ class OverrideSalarySlip(SalarySlip):
                             
                 if basic_amount and medical_amount:
                     base = (((basic_amount + medical_amount) / 30) * payment_days) * 0.0833
-            # frappe.msgprint(str(base))
-            else:
+
                 salary_structure_list = frappe.get_list(
                 "Salary Structure Assignment",
                 filters={"employee": self.employee},
                 order_by="creation desc",
-                limit_page_length=1
                 )
-                salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0])
-                base = (salary_structure.base*0.60003+ salary_structure.base*0.06667) * 0.0833
+                if len(salary_structure_list) > 1:
+                    salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0])
+                    employee_arrears_list = frappe.get_all("Employee Arrears",
+                                                                        {
+                                                                            "employee":self.employee,
+                                                                            "from_date": self.start_date,
+                                                                            "to_date": self.end_date,
+                                                                            "docstatus": 1
+                                                                        })
+                    
+                    basic_arrears = 0
+                    if employee_arrears_list:
+                        employee_arrears = frappe.get_doc("Employee Arrears",employee_arrears_list[0].name)
+                        for i in employee_arrears.e_a_earnings:
+                            basic_arrears = basic_arrears + i.amount
+
+                    new_base = 0
+                    payment_days = frappe.utils.date_diff(end_date , salary_structure.from_date) + 1
+                        
+                                
+                    if basic_arrears:
+                        new_base = (basic_arrears * 0.6667) * 0.0833
+                        print(new_base, salary_structure, "pf Salary Slip \n")
+                    base = new_base + base
             # frappe.msgprint(str(base))
-        
+            else:
+                basic_amount = 0
+                medical_amount = 0
+                payment_days = 0
+                base = 0
+                salary_structure_list = frappe.get_list(
+                "Salary Structure Assignment",
+                filters={"employee": self.employee},
+                order_by="creation desc",
+                )
+                print(len(salary_structure_list), "\n")
+                if len(salary_structure_list) > 1:
+                    salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[1])
+                    base = (salary_structure.base*0.60003+ salary_structure.base*0.06667) * 0.0833
+                    print(base, "pf Salary Slip \n")
+                    salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0])
+                    employee_arrears_list = frappe.get_all("Employee Arrears",
+                                                                       {
+                                                                           "employee":self.employee,
+                                                                            "from_date": self.start_date,
+                                                                            "to_date": self.end_date,
+                                                                            "docstatus": 1
+                                                                        })
+                    
+                    basic_arrears = 0
+                    if employee_arrears_list:
+                        employee_arrears = frappe.get_doc("Employee Arrears",employee_arrears_list[0].name)
+                        for i in employee_arrears.e_a_earnings:
+                            basic_arrears = basic_arrears + i.amount
+
+                    new_base = 0
+                    payment_days = frappe.utils.date_diff(end_date , salary_structure.from_date) + 1
+                        
+                                
+                    if basic_arrears:
+                        new_base = (basic_arrears * 0.6667) * 0.0833
+                        print(new_base, salary_structure, "pf Salary Slip \n")
+                    base = new_base + base
+                else:
+                    salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0])
+                    base = (salary_structure.base*0.60003+ salary_structure.base*0.06667) * 0.0833
+
+
+            # frappe.msgprint(str(base))
         self.custom_pf_deduction = base
         self.calculate_net_pay()
         self.compute_year_to_date()

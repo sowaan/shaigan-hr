@@ -154,6 +154,9 @@ override_doctype_class = {
 # 		"on_cancel": "method",
 # 		"on_trash": "method"
 # 	}
+# 	"Salary Slip":{
+# 		"before_save": "shaigan_hr.shaigan_hr.overrides.override_arrears_process.add_arrears_to_earnings"
+# 	}
 # }
 
 # Scheduled Tasks
@@ -186,7 +189,7 @@ override_doctype_class = {
 # ------------------------------
 #
 override_whitelisted_methods = {
-	"hrms.hr.doctype.leave_application.leave_application.get_number_of_leave_days" : "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.get_number_of_leave_day"
+	"hrms.hr.doctype.leave_application.leave_application.get_number_of_leave_days" : "shaigan_hr.shaigan_hr.overrides.quarter_leave_application.get_number_of_leave_day",
 }
 #
 # each overriding function accepts a `data` argument;

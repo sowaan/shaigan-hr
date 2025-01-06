@@ -111,7 +111,7 @@ class OverrideArrearsProcess(ArrearsProcess):
 				first_salary.custom_base = per_day * first_salary.custom_payment_day
 				first_salary.custom_absent_deduction = per_day * absent_days
 				first_salary.custom_monthly_salary = s_s_assignment.base
-					# print(per_day, first_salary.custom_payment_day, absent_days, s_s_assignment.base, "First Salary per_day \n\n\n\n")
+				print(per_day, first_salary.custom_payment_day, absent_days, s_s_assignment.base, "First Salary per_day \n\n\n\n")
 				first_salary.payment_days =  first_salary.payment_days - absent_days
 				first_salary.calculate_net_pay()
 				
@@ -138,12 +138,12 @@ class OverrideArrearsProcess(ArrearsProcess):
 					"docstatus": 1
 				})
 				per_day = s_s_assignment.base / second_salary.custom_payment_day
-				second_salary.custom_payment_day =  second_salary.custom_payment_day - absent_days
+				second_salary.custom_payment_day =  second_salary.custom_payment_day - (absent_days)
 				second_salary.custom_base = per_day * second_salary.custom_payment_day
-				second_salary.custom_absent_deduction = per_day * absent_days
+				second_salary.custom_absent_deduction = per_day * (absent_days)
 				second_salary.custom_monthly_salary = s_s_assignment.base
-				# print(per_day, second_salary.custom_payment_day, absent_days, s_s_assignment.base, "Sec Salary per_day \n\n\n\n")
-				second_salary.payment_days =  second_salary.payment_days - absent_days
+				print(per_day, second_salary.custom_payment_day, (absent_days), s_s_assignment.base, "Sec Salary per_day \n\n\n\n")
+				second_salary.payment_days =  second_salary.payment_days - (absent_days)
 				second_salary.calculate_net_pay() 
 				
 				
@@ -206,17 +206,19 @@ class OverrideArrearsProcess(ArrearsProcess):
 						if f_salary.salary_component == c_salary.salary_component:
 							arrears_basic += f_salary.amount
 							break
+					print(arrears_basic, "arrears_basic \n")
 
 					for s_salary in second_salary.deductions:
 						if s_salary.salary_component == c_salary.salary_component:
 							arrears_basic += s_salary.amount
 							break
+					print(arrears_basic, "arrears_basic \n")
 
 					for d_salary in default_salary.deductions:
 						if d_salary.salary_component == c_salary.salary_component:
 							arrears_basic -= d_salary.amount
 							break
-
+					print(arrears_basic, "arrears_basic \n")
 					c_salary.amount = arrears_basic
 					em_arr_total_deduction = em_arr_total_deduction + c_salary.amount
 
@@ -346,5 +348,4 @@ class OverrideArrearsProcess(ArrearsProcess):
 						"to": self.to_date,
 						"amount": arrears_basic
 					})
-					
-
+	
