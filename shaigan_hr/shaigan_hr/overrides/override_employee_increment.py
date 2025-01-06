@@ -80,7 +80,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			salary_slip.custom_base = per_day * salary_slip.custom_payment_day
 			salary_slip.custom_absent_deduction = per_day * absent_days
 			salary_slip.custom_monthly_salary = s_s_assignment.base
-			print(per_day, salary_slip.custom_payment_day, absent_days, s_s_assignment.base, "old Salary per_day \n\n\n\n")
+			# print(per_day, salary_slip.custom_payment_day, absent_days, s_s_assignment.base, "old Salary per_day \n\n\n\n")
 			salary_slip.payment_days =  salary_slip.payment_days - absent_days
 			salary_slip.calculate_net_pay()
 			# print("start Date", start_date, "end date", end_date_, "salary_slip.earnings \n\n\n\n", salary_slip.custom_payment_day, salary_slip.payment_days, absent_days, salary_slip.custom_base, "\n\n")
@@ -195,7 +195,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			total_basic = sal_2_basic + sal_1_basic   
 			arears_amount = total_basic - curr_basic
 
-			print(sal_1_basic, sal_2_basic, curr_basic, "sal_1_basic, sal_2_basic, curr_basic \n\n\n\n")
+			# print(sal_1_basic, sal_2_basic, curr_basic, "sal_1_basic, sal_2_basic, curr_basic \n\n\n\n")
 					
 			# for earning in salary_slip.earnings:
 			# 	for earning1 in salary_slip1.earnings:

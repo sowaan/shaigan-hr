@@ -48,7 +48,7 @@ class OverrideArrearsProcess(ArrearsProcess):
 				distinct=True
 			)
 
-		print(employees_list, "employees_list \n\n\n\n")
+		# print(employees_list, "employees_list \n\n\n\n")
 
 		if employees_list:
 			employees_done = []
@@ -166,7 +166,6 @@ class OverrideArrearsProcess(ArrearsProcess):
 					"from_date": self.from_date,
 					"to_date": self.to_date,
 					"earning_component": self.salary_component,
-					"docstatus": 1,
 					# "arrears_process": self.name
 				})  
 				earn_existing = []
@@ -223,7 +222,15 @@ class OverrideArrearsProcess(ArrearsProcess):
 
 				emp_arrears.total_deduction = em_arr_total_deduction
 				# print(emp_arrears.as_dict(), "emp_arrears \n\n\n\n")
-				emp_arrears.insert(ignore_permissions=True)
+				emp_arrears_exit = frappe.db.exists("Employee Arrears", {
+					"employee": emp.employee,
+					"from_date": self.from_date,
+					"to_date": self.to_date,
+					"earning_component": self.salary_component,
+				})
+				if not emp_arrears_exit:
+					emp_arrears.docstatus = 1
+					emp_arrears.insert(ignore_permissions=True)
 				arrears_basic = total_basic - curr_basic
 
 				
@@ -315,14 +322,29 @@ class OverrideArrearsProcess(ArrearsProcess):
 
 				emp_arrears.total_deduction = em_arr_total_deduction
 				# print(emp_arrears.as_dict(), "emp_arrears \n\n\n\n")
-				emp_arrears.insert(ignore_permissions=True)
+				emp_arrears_exit = frappe.db.exists("Employee Arrears", {
+					"employee": self.employee,
+					"from_date": self.from_date,
+					"to_date": self.to_date,
+					"earning_component": self.salary_component,
+				})
+				if not emp_arrears_exit:
+					emp_arrears.insert(ignore_permissions=True)
 				arrears_basic = total_basic
 
 				
-				self.append("arrear_process_detail", {
-					"employee": self.employee,
-					"to": self.to_date,
-					"amount": arrears_basic
-				})
+				if self.employee in [row.employee for row in self.arrear_process_detail]:
+					for row in self.arrear_process_detail:
+						if row.employee == self.employee:
+							# If the condition is true, update the row
+							row.to = self.to_date
+							row.amount = arrears_basic
+							break
+				else:
+					self.append("arrear_process_detail", {
+						"employee": self.employee,
+						"to": self.to_date,
+						"amount": arrears_basic
+					})
 					
 
