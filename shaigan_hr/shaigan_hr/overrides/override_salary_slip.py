@@ -287,15 +287,18 @@ class OverrideSalarySlip(SalarySlip):
                 filters={"employee": self.employee},
                 order_by="creation desc",
                 )
-                print(salary_structure_list, "\n")
-                exit_between_payroll_date = frappe.db.exists("Salary Structure Assignment", {
-                    "employee": self.employee,
-                    "from_date": ["between", [start_date, end_date]],
-                })
+                # print(salary_structure_list, "\n")
+               
                 # print(exit_between_payroll_date, "pf Salary Slip \n")
-                if exit_between_payroll_date:
-                    if len(salary_structure_list) > 1:
+                if len(salary_structure_list) > 1:
+                    currect_month_structure = frappe.db.exists("Salary Structure Assignment", {
+                        "employee": self.employee,
+                        "from_date": ["Between", [start_date, end_date]],
+                        "docstatus": 1,
+                    })
+                    if currect_month_structure:
                         salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[1].name)
+                        # print(salary_structure.base, "structure Salary Slip \n")
                         base = (salary_structure.base*0.60003+ salary_structure.base*0.06667) * 0.0833
                         # print(base, "pf Salary Slip \n")
                         salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0].name)
@@ -321,13 +324,43 @@ class OverrideSalarySlip(SalarySlip):
                             new_base = (basic_arrears * 0.6667) * 0.0833
                             # print(new_base, salary_structure, "pf Salary Slip \n")
                         base = new_base + base
+                    else:
+                        salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0].name)
+                        base = (salary_structure.base*0.60003+ salary_structure.base*0.06667) * 0.0833
+                        # print(base, "pf Salary Slip 330 \n")
+                        employee_arrears_list = frappe.get_all("Employee Arrears",
+                                                                        {
+                                                                            "employee":self.employee,
+                                                                                "from_date": self.start_date,
+                                                                                "to_date": self.end_date,
+                                                                                "docstatus": 1
+                                                                            })
+
+
+                        
+                        basic_arrears = 0
+                        if employee_arrears_list:
+                            employee_arrears = frappe.get_doc("Employee Arrears",employee_arrears_list[0].name)
+                            for i in employee_arrears.e_a_earnings:
+                                basic_arrears = basic_arrears + i.amount
+
+                        new_base = 0
+                                    
+                        if basic_arrears:
+                            new_base = (basic_arrears * 0.6667) * 0.0833
+                            # print(new_base, salary_structure, "pf Salary Slip \n")
+
+                        base = new_base + base
+                        # print(base, "checking")
+
                 else:
-                    salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0])
+                    salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0].name)
                     # print(salary_structure, "pf Salary Slip \n")
                     base = (salary_structure.base*0.60003+ salary_structure.base*0.06667) * 0.0833
 
 
             # frappe.msgprint(str(base))
+        # print(base, "pf Salary Slip  263 \n")
         self.custom_pf_deduction = base
         self.calculate_net_pay()
         self.compute_year_to_date()
