@@ -23,7 +23,8 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			"currency": salary_sturcture.currency,
 			"income_tax_slab": tax_slab.name,
 			"base": self.revised_salary,
-			"docstatus": 1
+			"docstatus": 1,
+			"employee_increment": self.name
 		})
 		salary_sturcture.insert(ignore_permissions=True)
 
