@@ -142,6 +142,7 @@ override_doctype_class = {
   "Salary Slip" : "shaigan_hr.shaigan_hr.overrides.override_salary_slip.OverrideSalarySlip" ,
   "Employee Increment" : "shaigan_hr.shaigan_hr.overrides.override_employee_increment.OverrideEmployeeIncrement",
   "Arrears Process" : "shaigan_hr.shaigan_hr.overrides.override_arrears_process.OverrideArrearsProcess",
+  "Compensatory Leave Request" : "shaigan_hr.shaigan_hr.overrides.compensatory_leave_request.OverrideCompensatoryLeaveRequest" ,
 }
 
 # Document Events
