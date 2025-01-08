@@ -28,7 +28,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 		})
 		salary_sturcture.insert(ignore_permissions=True)
 
-
+		arrears_setting = frappe.get_doc("Arrears Process Setting")
 		salary_slip = frappe.db.exists("Salary Slip", {
 				"start_date": ["<=", self.increment_date],
 				"end_date": [">=", self.increment_date],
@@ -185,13 +185,17 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			
 			arears_amount = 0
 			sal_1_basic = 0
+
 			for x in salary_slip.earnings:
-				sal_1_basic = sal_1_basic + x.amount
+				for y in arrears_setting.earnings:
+					if x.salary_component == y.salary_component:
+						sal_1_basic = sal_1_basic + x.amount
 
 			sal_2_basic = 0
 			for x in salary_slip1.earnings:
-				# if x.salary_component == 'Basic':
-				sal_2_basic = sal_2_basic + x.amount
+				for y in arrears_setting.earnings:
+					if x.salary_component == y.salary_component:
+						sal_2_basic = sal_2_basic + x.amount
 
 			total_basic = sal_2_basic + sal_1_basic   
 			arears_amount = total_basic - curr_basic
