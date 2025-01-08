@@ -260,11 +260,18 @@ class OverrideArrearsProcess(ArrearsProcess):
 			# 	employee_joining_date = frappe.db.get_value("Employee", self.employee, "date_of_joining")
 			previouse_month_from_date = frappe.utils.add_months(self.from_date, -1)
 			previous_month_end_date = frappe.utils.add_months(self.to_date, -1)
-
-			new_employee = frappe.get_all("Employee", filters={
-				"date_of_joining": ["Between", [previouse_month_from_date, previous_month_end_date]],
-				"status": "Active"
-			})
+			new_employee = []
+			if self.employee:
+				new_employee = frappe.get_all("Employee", filters={
+					"name": self.employee,
+					"date_of_joining": ["Between", [previouse_month_from_date, previous_month_end_date]],
+					"status": "Active"
+				})
+			else:
+				new_employee = frappe.get_all("Employee", filters={
+					"date_of_joining": ["Between", [previouse_month_from_date, previous_month_end_date]],
+					"status": "Active"
+				})
 
 			for emp in new_employee:
 				if (not frappe.db.exists("Salary Slip", {
