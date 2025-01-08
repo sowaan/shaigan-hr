@@ -63,7 +63,7 @@ class OverrideSalarySlip(SalarySlip):
         date_of_joining = frappe.db.get_value('Employee' , self.employee , 'date_of_joining')
 
         if str(date_of_joining) > str(self.start_date) and str(date_of_joining) <= str(self.end_date) :
-            joining_date_days_diff = frappe.utils.date_diff(add_days(date_of_joining, -1) , self.start_date)
+            joining_date_days_diff = frappe.utils.date_diff(date_of_joining , self.start_date)
 
         base = 0
 
