@@ -11,8 +11,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			"disabled": 0,
 			"docstatus": 1,
 			"currency": salary_sturcture.currency
-		}
-			)
+		})
 		salary_sturcture = frappe.get_doc({
 			"doctype": "Salary Structure Assignment",
 			"employee": self.employee,
@@ -36,15 +35,14 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			})
 
 		if salary_slip:
-			last_salary_slip = frappe.get_doc("Salary Slip", salary_slip)
-			
 			start_date = frappe.db.get_value("Salary Slip", salary_slip, "start_date")
 			end_date = frappe.db.get_value("Salary Slip", salary_slip, "end_date")
+			posting_date = frappe.db.get_value("Salary Slip", salary_slip, "posting_date")
 
 			last_salary_slip = frappe.get_doc({
 				"doctype": 'Salary Slip',
 				"employee": self.employee,
-				"posting_date": last_salary_slip.posting_date,
+				"posting_date": posting_date,
 				"payroll_frequency": "",
 				"start_date": start_date,
 				"end_date": end_date
@@ -133,23 +131,19 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			
 			arr_process_setting = frappe.get_doc("Arrears Process Setting")
 
-			earn_existing = []
-			deduct_existing = []
-
 			for x in arr_process_setting.earnings:
-				earn_existing.append(x.salary_component)
 				emp_arrears.append("e_a_earnings", {
 					"salary_component": x.salary_component,
 					"amount": 0
 				})
 
 			for x in arr_process_setting.deductions:
-				deduct_existing.append(x.salary_component)
 				emp_arrears.append("e_a_deductions", {
 					"salary_component": x.salary_component,
 					"amount": 0
 				})
 			
+			total_earning = 0
 			for f_salary in salary_slip.earnings:
 				for s_salary in salary_slip1.earnings:
 					for d_salary in last_salary_slip.earnings:
@@ -157,10 +151,12 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 							if f_salary.salary_component == s_salary.salary_component == d_salary.salary_component == c_salary.salary_component:
 								# print(f_salary.salary_component, f_salary.amount, s_salary.amount, d_salary.amount, "f_salary.amount \n\n\n\n")
 								arrears_basic = (s_salary.amount + f_salary.amount) - d_salary.amount
+								total_earning = total_earning + arrears_basic
 								c_salary.amount = arrears_basic
+
 								break
 			
-
+			total_deduction = 0
 			for c_salary in emp_arrears.e_a_deductions:
 				arrears_basic = 0
 				for f_salary in salary_slip.deductions:
@@ -177,10 +173,12 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 					if d_salary.salary_component == c_salary.salary_component:
 						arrears_basic -= d_salary.amount
 						break
-
+				
+				total_deduction = total_deduction + arrears_basic
 				c_salary.amount = arrears_basic
 
-
+			emp_arrears.total_earning = total_earning
+			emp_arrears.total_deduction = total_deduction
 			emp_arrears.insert(ignore_permissions=True)
 			
 			arears_amount = 0
@@ -199,17 +197,6 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 
 			total_basic = sal_2_basic + sal_1_basic   
 			arears_amount = total_basic - curr_basic
-
-			# print(sal_1_basic, sal_2_basic, curr_basic, "sal_1_basic, sal_2_basic, curr_basic \n\n\n\n")
-					
-			# for earning in salary_slip.earnings:
-			# 	for earning1 in salary_slip1.earnings:
-			# 		if earning.salary_component == earning1.salary_component:
-			# 			# print(earning.amount, earning1.amount, "earning.amount \n\n\n\n")
-			# 			base =  earning.amount + earning1.amount
-			# 			arears_amount = arears_amount + (base - earning.amount)
-			# 			break
-			
 			
 			arrears = frappe.get_doc({
 				"doctype": "Arrears Process",
@@ -232,7 +219,6 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			a_p_deduct_existing = []
 
 			for x in arr_process_setting.earnings:
-				x.name = None
 				if not x.salary_component in a_p_earn_existing:
 					a_p_earn_existing.append(x.salary_component)
 					arrears.append("a_p_earnings", {
@@ -241,7 +227,6 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 					})
 
 			for x in arr_process_setting.deductions:
-				x.name = None
 				if not x.salary_component in a_p_deduct_existing:
 					a_p_deduct_existing.append(x.salary_component)
 					arrears.append("a_p_deductions", {
