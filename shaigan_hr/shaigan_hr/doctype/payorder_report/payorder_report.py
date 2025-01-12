@@ -42,8 +42,9 @@ class PayorderReport(Document):
 
 
 
-		# Combine filters into SQL WHERE clause
 		filter_condition = " AND ".join(filters)
+		if filter_condition:
+			filter_condition = " AND " + filter_condition
 
 		query = frappe.db.sql(f"""
 			SELECT
@@ -64,8 +65,8 @@ class PayorderReport(Document):
 				start_date >= %(start_date)s
 				AND end_date <= %(end_date)s
 				AND ss.docstatus = 1
-				{filter_condition}
 				AND e.bank_name = "Payorder"
+				{filter_condition}
 				
 		""", params, as_dict=True)
 
