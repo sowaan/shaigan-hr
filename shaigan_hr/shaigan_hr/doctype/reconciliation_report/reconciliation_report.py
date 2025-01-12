@@ -6,441 +6,677 @@ from frappe.model.document import Document
 
 
 class ReconciliationReport(Document):
-	def before_save(self):
+	def before_save(doc):
 
-		doc = self
+		# doc = self
 		start_date = doc.start_date
 		end_date = doc.end_date
 		total_month_days = 30
-		employee_id = doc.employee
 		
-		employee_filter=""
-		employee1_filter=""
-		if doc.employee:
-			employee_filter = "AND e.name = %(employee_id)s"
-			employee1_filter = "AND ss.employee = %(employee_id)s"
 
-
-		#for Joiners Table
-		joiners_employees = frappe.db.sql(f"""
-				SELECT 
-					e.name,
-					e.employee_name,e.date_of_joining,e.relieving_date,e.designation,ssa.base AS base_salary
-				FROM 
-					`tabEmployee` e
-				LEFT JOIN (
-					SELECT 
-						employee, base, MAX(from_date) AS latest_from_date
-					FROM 
-						`tabSalary Structure Assignment`
-					GROUP BY 
-						employee
-				) ssa
-				ON e.name = ssa.employee
-				WHERE 
-					e.date_of_joining BETWEEN %(start_date)s AND %(end_date)s
-					AND (
-						e.relieving_date IS NULL OR 
-						NOT (e.relieving_date BETWEEN %(start_date)s AND %(end_date)s)
-					)
-					AND EXISTS (
-						SELECT 1 
-						FROM `tabSalary Slip` ss 
-						WHERE ss.employee = e.name
-					)
-					{employee_filter}
-			""", {"start_date": start_date, "end_date": end_date ,  "employee_id": employee_id}, as_dict=True )
-		
-		doc.table_qase = []
-		for employee in joiners_employees:
-			
-			base_salary = employee["base_salary"] if employee["base_salary"] else 0
-			days_diff = frappe.utils.date_diff(end_date, employee["date_of_joining"]) + 1
-			paid_salary = ( (base_salary / total_month_days) * days_diff)
-			doc.append("table_qase", {
-				"employee_id": employee["name"],"employee_name": employee["employee_name"],"designation": employee["designation"],"base_salary": base_salary,"paid_days": days_diff,"paid_salary" : paid_salary
-				
-			})
-
-		# For Leavers Table
-		doc.leavers=[]
-		leavers_employees = frappe.db.sql(f"""
-				SELECT 
-					e.name,e.employee_name,e.date_of_joining,e.relieving_date,e.designation,ssa.base AS base_salary
-				FROM 
-					`tabEmployee` e
-				LEFT JOIN (
-					SELECT 
-						employee, base, MAX(from_date) AS latest_from_date
-					FROM 
-						`tabSalary Structure Assignment`
-					GROUP BY 
-						employee
-				) ssa
-				ON e.name = ssa.employee
-				WHERE 
-					e.relieving_date BETWEEN %(start_date)s AND %(end_date)s
-					AND EXISTS (
-						SELECT 1 
-						FROM `tabSalary Slip` ss 
-						WHERE ss.employee = e.name
-					)
-					{employee_filter}
-			""", {"start_date": start_date, "end_date": end_date, "employee_id": employee_id} , as_dict=True)
-
-
-		for employee in leavers_employees:
-			
-			base_salary = employee["base_salary"] if employee["base_salary"] else 0
-			days_diff = frappe.utils.date_diff(end_date, employee["date_of_joining"]) + 1
-			paid_salary = ( (base_salary / total_month_days) * days_diff)
-			doc.append("leavers", {
-				"employee_id": employee["name"],"employee_name": employee["employee_name"],"designation": employee["designation"],"base_salary": base_salary
-				
-			})
-
-
-		#For Arrears
 		prev_start_date = frappe.utils.add_to_date(start_date, months= -1)
 		prev_end_date = frappe.utils.add_to_date(end_date, months= -1)
 		
-		doc.arrears=[]
-		arrears_employees = frappe.db.sql(f"""
-				SELECT 
-					e.name,e.employee_name,e.date_of_joining,e.relieving_date,e.designation,e.custom_basic_salary
-				FROM 
-					`tabEmployee` e
-				WHERE 
-					e.date_of_joining BETWEEN %(prev_start_date)s AND %(prev_end_date)s
-					AND (
-						e.relieving_date IS NULL OR 
-						NOT (e.relieving_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s)
-					)
-					AND NOT EXISTS (
-						SELECT 1 
-						FROM `tabSalary Slip` ss 
-						WHERE ss.employee = e.name
-					)
-					{employee_filter}
-			""", {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date, "employee_id": employee_id}, as_dict=True)
+		# employee_filter=""
+		# employee1_filter=""
+		# if doc.employee:
+		# 	employee_filter = "AND e.name = %(employee_id)s"
+		# 	employee1_filter = "AND ss.employee = %(employee_id)s"
 
-		increment_arrears_employees = frappe.db.sql(f"""
-					SELECT 
-						e.name, 
-						e.employee_name, 
-						e.designation, 
-						e.custom_basic_salary,
-						ad.payroll_date
-					FROM 
-						`tabEmployee` e
-					JOIN 
-						`tabAdditional Salary` ad ON ad.employee = e.name
-					WHERE 
-						ad.payroll_date BETWEEN %(start_date)s AND %(end_date)s
-						AND ad.salary_component = "Increment Arrears"
-						AND ad.docstatus = 1
-						{employee_filter}
-				""", {"start_date": start_date, "end_date": end_date, "employee_id": employee_id}, as_dict=True)
-						
-
-		for employee in arrears_employees:
-			
-			base_salary = employee["custom_basic_salary"] if employee["custom_basic_salary"] else 0
-			days_diff = frappe.utils.date_diff(prev_end_date, employee["date_of_joining"]) + 1
-			paid_salary = ( (base_salary / total_month_days) * days_diff)
-			doc.append("arrears", {
-				"employee_id": employee["name"],"employee_name": employee["employee_name"],"designation": employee["designation"],"base_salary": base_salary,"paid_days" : days_diff,"paid_salary" : paid_salary
-				
-			})
-
-		for employee in increment_arrears_employees:
-			
-			base_salary = employee["custom_basic_salary"] if employee["custom_basic_salary"] else 0
-			days_diff = frappe.utils.date_diff(end_date, employee["payroll_date"]) + 1
-			paid_salary = ( (base_salary / total_month_days) * days_diff)
-			doc.append("arrears", {
-				"employee_id": employee["name"],"employee_name": employee["employee_name"],"designation": employee["designation"],"base_salary": base_salary,"paid_days" : days_diff,"paid_salary" : paid_salary
-				
-			})
+		filters = []
+		filters_salaryslip = []
+		params = {
+			"start_date": start_date, 
+			"end_date": end_date,
+			"prev_start_date": prev_start_date,
+			"prev_end_date": prev_end_date
+		}
+		employee_id = doc.employee
+		company = doc.company
+		branch = doc.branch
+		department = doc.department
 
 
 
-		# For Increment / Incetives Table
-		doc.table_robb = []
-		increment_incentives_employees = frappe.db.sql(f"""
-					SELECT 
-						e.name, 
-						e.employee_name, 
-						e.designation,
-						pd.custom_salary_change_amount
-					FROM 
-						`tabEmployee` e
-					JOIN 
-						`tabEmployee Promotion` pd ON pd.employee = e.name
-					WHERE 
-						pd.promotion_date BETWEEN %(start_date)s AND %(end_date)s
-						AND pd.docstatus = 1
-						{employee_filter}
-				""", {"start_date": start_date, "end_date": end_date, "employee_id": employee_id}, as_dict=True)
-						
+		# Add filters dynamically
+		if company:
+			filters.append("e.company = %(company)s")
+			params["company"] = company
+			filters_salaryslip.append("ss.company = %(company)s")
 
-		for employee in increment_incentives_employees:
-			doc.append("table_robb", {
-				"employee_id": employee["name"],"employee_name": employee["employee_name"],"designation": employee["designation"],"increment_amount": employee["custom_salary_change_amount"]				
-			})
+		if branch:
+			filters.append("e.branch = %(branch)s")
+			params["branch"] = branch
+			filters_salaryslip.append("ss.branch = %(branch)s")
 
-		
+		if department:
+			filters.append("e.department = %(department)s")
+			params["department"] = department
+			filters_salaryslip.append("ss.department = %(department)s")
 
+		if employee_id:
+			filters.append("e.name = %(employee_id)s")
+			params["employee_id"] = employee_id
+			filters_salaryslip.append("ss.employee = %(employee_id)s")
 
-		#For Allowances
-		doc.allowances = []
-		total_allowances_current = frappe.db.sql("""
-				SELECT 
-					sd.salary_component AS component_name,
-					SUM(sd.amount) AS total_allowances
-				FROM 
-					`tabSalary Slip` ss
-				JOIN 
-					`tabSalary Detail` sd ON ss.name = sd.parent
-				WHERE 
-					ss.posting_date BETWEEN %(start_date)s AND %(end_date)s
-					AND sd.salary_component IN (
-						SELECT sc.name 
-						FROM `tabSalary Component` sc 
-						WHERE sc.custom_is_allowance = 1 AND sc.disabled = 0
-					)
-					AND ss.docstatus = 1
-				GROUP BY 
-					sd.salary_component
-			""", {"start_date": start_date, "end_date": end_date}, as_dict=True)
-		
-		total_allowances_previous = frappe.db.sql("""
-				SELECT 
-					sd.salary_component AS component_name,
-					SUM(sd.amount) AS total_allowances
-				FROM 
-					`tabSalary Slip` ss
-				JOIN 
-					`tabSalary Detail` sd ON ss.name = sd.parent
-				WHERE 
-					ss.posting_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
-					AND sd.salary_component IN (
-						SELECT sc.name 
-						FROM `tabSalary Component` sc 
-						WHERE sc.custom_is_allowance = 1 AND sc.disabled = 0
-					)
-					AND ss.docstatus = 1
-				GROUP BY 
-					sd.salary_component
-			""", {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date}, as_dict=True)
-		
-		current_allowances_dict = {allowance["component_name"]: allowance["total_allowances"] for allowance in total_allowances_current}
-		previous_allowances_dict = {allowance["component_name"]: allowance["total_allowances"] for allowance in total_allowances_previous}
+		# Combine filters into SQL WHERE clause
+		filter_condition = " AND ".join(filters)
+		filter_condition_salaryslip = " AND ".join(filters_salaryslip)
+		if filter_condition_salaryslip:
+			filter_condition_salaryslip = " AND " + filter_condition_salaryslip
 
-		all_component_names = set(current_allowances_dict.keys()).union(set(previous_allowances_dict.keys()))
-
-		for component_name in all_component_names:
-			# Get the current and previous allowances (default to 0 if not present)
-			current = current_allowances_dict.get(component_name, 0)
-			previous = previous_allowances_dict.get(component_name, 0)
-			
-			# Calculate the difference
-			difference = current - previous
-			if difference > 0:
-				doc.append("allowances", {
-					"salary_component_type": component_name,"difference": difference
-					
-				})
-
-
-
-		#For Allowances Cancelled
-		doc.allowances_cancelled = []
-		total_allowances_current_cancelled = frappe.db.sql("""
-				SELECT 
-					sd.salary_component AS component_name,
-					SUM(sd.amount) AS total_allowances
-				FROM 
-					`tabSalary Slip` ss
-				JOIN 
-					`tabSalary Detail` sd ON ss.name = sd.parent
-				WHERE 
-					ss.posting_date BETWEEN %(start_date)s AND %(end_date)s
-					AND sd.salary_component IN (
-						SELECT sc.name 
-						FROM `tabSalary Component` sc 
-						WHERE sc.custom_is_allowance = 1 AND sc.disabled = 0
-					)
-					AND ss.docstatus = 1
-				GROUP BY 
-					sd.salary_component
-			""", {"start_date": start_date, "end_date": end_date}, as_dict=True)
-		
-		total_allowances_previous_cancelled = frappe.db.sql("""
-				SELECT 
-					sd.salary_component AS component_name,
-					SUM(sd.amount) AS total_allowances
-				FROM 
-					`tabSalary Slip` ss
-				JOIN 
-					`tabSalary Detail` sd ON ss.name = sd.parent
-				WHERE 
-					ss.posting_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
-					AND sd.salary_component IN (
-						SELECT sc.name 
-						FROM `tabSalary Component` sc 
-						WHERE sc.custom_is_allowance = 1 AND sc.disabled = 0
-					)
-					AND ss.docstatus = 1
-				GROUP BY 
-					sd.salary_component
-			""", {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date}, as_dict=True)
-		
-		current_allowances_dict = {allowance["component_name"]: allowance["total_allowances"] for allowance in total_allowances_current_cancelled}
-		previous_allowances_dict = {allowance["component_name"]: allowance["total_allowances"] for allowance in total_allowances_previous_cancelled}
-
-		all_component_names = set(current_allowances_dict.keys()).union(set(previous_allowances_dict.keys()))
-
-		for component_name in all_component_names:
-			current = current_allowances_dict.get(component_name, 0)
-			previous = previous_allowances_dict.get(component_name, 0)
-			difference = current - previous
-			if difference < 0:
-				difference = difference * -1
-				doc.append("allowances_cancelled", {
-					"salary_component_type": component_name,"difference": difference
-					
-				})
+		if filter_condition:
+			filter_condition = " AND " + filter_condition
 
 
 
 
-		#For Less Paid
-		doc.less_paid_last_month = []
-		less_paid_data = frappe.db.sql(f"""
+		#joiners#########################################
+		joiners_employees = frappe.db.sql(f"""
 			SELECT 
-				ss.employee AS employee_id,ss.employee_name AS employee_name,ss.absent_days AS absent_days,ssa.base AS basic_salary,ss.designation AS designation
+				e.name AS employee_id,
+				e.employee_name,
+				e.date_of_joining,
+				e.relieving_date,
+				e.designation,
+				ss.gross_pay,
+				SUM(CASE WHEN se.salary_component = 'Pre Month Arrear' THEN se.amount ELSE 0 END) AS pre_month_arrear,
+				SUM(CASE WHEN se.salary_component = 'Imprest Reimbursement' THEN se.amount ELSE 0 END) AS imprest_reimbursement,
+				SUM(CASE WHEN se.salary_component = 'Arrears' THEN se.amount ELSE 0 END) AS arrears,
+				SUM(CASE WHEN se.salary_component = 'Increment Arrears' THEN se.amount ELSE 0 END) AS increment_arrears,
+				SUM(CASE WHEN se.salary_component = 'Arrears (Automated)' THEN se.amount ELSE 0 END) AS automated_arrears
+			FROM 
+				`tabEmployee` e
+			INNER JOIN `tabSalary Slip` ss ON ss.employee = e.name
+			LEFT JOIN `tabSalary Detail` se ON se.parent = ss.name AND se.parentfield = 'earnings'
+			WHERE 
+				(
+					e.date_of_joining BETWEEN %(start_date)s AND %(end_date)s 
+					OR (
+						e.date_of_joining BETWEEN %(prev_start_date)s AND %(prev_end_date)s
+						AND NOT EXISTS (  
+							SELECT 1 FROM `tabSalary Slip` ss_prev
+							WHERE ss_prev.employee = e.name
+							AND ss_prev.start_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
+						)
+					)
+				)
+				AND ss.start_date BETWEEN %(start_date)s AND %(end_date)s  -- Only current month's salary slips
+				{filter_condition}
+			GROUP BY e.name, ss.name
+		""",params, as_dict=True)
+
+		# Clear previous data
+		doc.table_qase = []
+
+		# Process each employee's salary details
+		for employee in joiners_employees:
+			gross_pay = employee["gross_pay"] if employee["gross_pay"] else 0
+			pre_month_arrear = employee["pre_month_arrear"] if employee["pre_month_arrear"] else 0
+			imprest_reimbursement = employee["imprest_reimbursement"] if employee["imprest_reimbursement"] else 0
+			arrears = employee["arrears"] if employee["arrears"] else 0
+			increment_arrears = employee["increment_arrears"] if employee["increment_arrears"] else 0
+			automated_arrears = employee["automated_arrears"] if employee["automated_arrears"] else 0
+
+			# Calculate the adjusted base salary
+			adjusted_base_salary = (
+				gross_pay 
+				- pre_month_arrear 
+				- imprest_reimbursement 
+				- arrears 
+				- increment_arrears 
+				- automated_arrears
+			)
+
+			# Calculate paid salary based on joining days
+			days_diff = frappe.utils.date_diff(end_date, employee["date_of_joining"]) + 1
+			if days_diff > 30:
+				days_diff = 30
+
+			# Append data to the table
+			doc.append("table_qase", {
+				"employee_id": employee["employee_id"],
+				"employee_name": employee["employee_name"],
+				"designation": employee["designation"],
+				"base_salary": adjusted_base_salary,
+				"paid_days": days_diff,
+				"paid_salary": adjusted_base_salary
+			})
+
+
+		
+
+
+		# For Leavers Table#################################################
+		doc.leavers = []
+
+		# Query to get leavers' details and arrears components (if any)
+		leavers_employees = frappe.db.sql(f"""
+			SELECT
+				e.name AS employee_id,
+				e.employee_name,
+				e.date_of_joining,
+				e.relieving_date,
+				e.designation,
+				ss_prev.gross_pay,
+				SUM(CASE WHEN se.salary_component = 'Imprest Reimbursement' THEN se.amount ELSE 0 END) AS imprest_reimbursement,
+				SUM(CASE WHEN se.salary_component LIKE '%%Arrear%%' THEN se.amount ELSE 0 END) AS arrears_amount  -- Sum of all arrears components
+			FROM
+				`tabEmployee` e
+			INNER JOIN `tabSalary Slip` ss_prev ON ss_prev.employee = e.name 
+				AND ss_prev.start_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s  -- Previous month salary slip
+			LEFT JOIN `tabSalary Detail` se ON se.parent = ss_prev.name AND se.parentfield = 'earnings'
+			WHERE
+				e.relieving_date BETWEEN %(start_date)s AND %(end_date)s
+				{filter_condition}
+			GROUP BY e.name, ss_prev.name
+		""",params
+		#   {
+		# 	"start_date": start_date,
+		# 	"end_date": end_date,
+		# 	"prev_start_date": prev_start_date,
+		# 	"prev_end_date": prev_end_date,
+		# 	"employee_id": employee_id
+		# }
+		, as_dict=True)
+
+		# Process each leaver's salary details
+		for employee in leavers_employees:
+			gross_pay = employee["gross_pay"] if employee["gross_pay"] else 0
+			imprest_reimbursement = employee["imprest_reimbursement"] if employee["imprest_reimbursement"] else 0
+			arrears_amount = employee["arrears_amount"] if employee["arrears_amount"] else 0
+
+			# Adjust the gross pay by subtracting "Imprest Reimbursement" and all "Arrears" components
+			adjusted_gross_pay = gross_pay - imprest_reimbursement - arrears_amount
+
+			# Append to the leavers table
+			doc.append("leavers", {
+				"employee_id": employee["employee_id"],
+				"employee_name": employee["employee_name"],
+				"designation": employee["designation"],
+				"base_salary": adjusted_gross_pay
+			})
+
+
+
+
+
+
+
+		#For Arrears########################################################
+		doc.arrears = []
+		salary_slips_with_arrears = frappe.db.sql(f"""
+			SELECT 
+				e.name AS employee_id,
+				e.employee_name AS employee_name,
+				e.designation,
+				se.salary_component,
+				se.amount
 			FROM 
 				`tabSalary Slip` ss
-			LEFT JOIN (
-				SELECT 
-					employee, 
-					base, 
-					MAX(from_date) AS latest_from_date
-				FROM 
-					`tabSalary Structure Assignment`
-				WHERE 
-					docstatus = 1
-				GROUP BY 
-					employee
-			) ssa ON ss.employee = ssa.employee
-
+			INNER JOIN `tabEmployee` e ON e.name = ss.employee
+			INNER JOIN `tabSalary Detail` se 
+				ON se.parent = ss.name AND se.parentfield = 'earnings'
 			WHERE 
-				ss.docstatus = 1
-				AND ss.posting_date BETWEEN %(start_date)s AND %(end_date)s
-				{employee1_filter}
-		""", {"start_date": start_date, "end_date": end_date,"employee_id": employee_id}, as_dict=True)
+				ss.start_date BETWEEN %(start_date)s AND %(end_date)s
+				AND se.salary_component LIKE '%%Arrear%%' 
+				{filter_condition}
+			ORDER BY ss.start_date
+		""",params
+		#   {
+		# 	"start_date": start_date,
+		# 	"end_date": end_date,
+		# 	"employee_id":employee_id
+		# }
+		, as_dict=True)
+
+		# Process each employee's salary slip with arrears
+		for employee in salary_slips_with_arrears:
+			arrears_amount = employee["amount"] if employee["amount"] else 0  # Get arrears amount
+
+			# Append to the arrears list in the document
+			doc.append("arrears", {
+				"employee_id": employee["employee_id"],
+				"employee_name": employee["employee_name"],
+				"designation": employee["designation"],
+				"arrears_type": employee["salary_component"],  # Name of the arrears component
+				"amount": arrears_amount  # Amount of the arrears
+			})
 
 
 
-		for employee in less_paid_data:
 
-			base_salary = employee["basic_salary"] if employee["basic_salary"] else 0
-			absent_days = employee["absent_days"]
-			paid_days = 30 - absent_days
-			paid_salary = ( (base_salary / total_month_days) * absent_days)
-			if paid_salary < base_salary:
+		# For Increment / Incetives Table############################################
+		doc.table_robb = []
+		doc.table_robb = []
+		combined_query = f"""
+			SELECT 
+				e.name AS employee_id, 
+				e.employee_name, 
+				e.designation,
+				SUM(ead.amount) AS increment_amount,
+				CASE 
+					WHEN ei.increment_date IS NOT NULL THEN DATEDIFF(%(end_date)s, ei.increment_date)+1
+					ELSE 30 
+				END AS days
+			FROM
+				`tabEmployee` e
+			JOIN
+				`tabEmployee Arrears` ea ON ea.employee = e.name
+			JOIN
+				`tabEmployee Earning Detail` ead ON ead.parent = ea.name
+			LEFT JOIN
+				`tabEmployee Increment` ei ON ei.employee = e.name
+				AND ei.arrears_salary_component NOT LIKE 'Pre Increment Arrears'  -- Exclude Pre Increment Arrears
+				AND ei.increment_date BETWEEN %(start_date)s AND %(end_date)s
+			WHERE
+				ea.from_date = %(start_date)s
+				AND ea.to_date = %(end_date)s
+				AND ea.earning_component LIKE '%%Increment%%'
+				AND ea.earning_component NOT LIKE 'Pre Increment Arrears'
+				AND ea.docstatus = 1
+				{filter_condition}
+			GROUP BY e.name
 
-				doc.append("less_paid_last_month", {
-					"employee_id": employee["employee_id"],"employee_name": employee["employee_name"],"designation": employee["designation"],"base_salary": base_salary,"paid_days" : paid_days,"paid_salary" : paid_salary
+			
+			# UNION ALL
+			
+			# SELECT 
+			# 	e.name AS employee_id, 
+			# 	e.employee_name, 
+			# 	e.designation,
+			# 	ei.increment_amount AS increment_amount,
+			# 	30 AS days
+			# FROM
+			# 	`tabEmployee` e
+			# JOIN
+			# 	`tabEmployee Increment` ei ON ei.employee = e.name
+			# WHERE
+			# 	ei.increment_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
+			# 	AND ei.arrears_salary_component = 'Pre Increment Arrears'
+			# 	AND ei.docstatus = 1
+				
+		"""
+
+		# Execute the query
+		combined_results = frappe.db.sql(combined_query,params
+		# 						    {
+		# 	"start_date": start_date,
+		# 	"end_date": end_date,
+		# 	"prev_start_date": prev_start_date,
+		# 	"prev_end_date": prev_end_date,
+		# 	"employee_id": employee_id
+		# }
+		, as_dict=True)
+
+		# Append each result to table_robb
+		for employee in combined_results:
+			doc.append("table_robb", {
+				"employee_id": employee["employee_id"],
+				"employee_name": employee["employee_name"],
+				"designation": employee["designation"],
+				"increment_amount": round(employee["increment_amount"]),
+				"increment_days" : employee["days"]
+			})
+		
+
+
+		#For Allowances###############################################
+		doc.allowances = []
+		doc.allowances_cancelled = []
+		total_allowances_current = frappe.db.sql(f"""
+			SELECT 
+				ss.employee AS employee_id,
+				ss.employee_name,
+				ss.designation,
+				sd.salary_component AS component_name,
+				sd.amount AS total_allowances,
+				"current" as tag
+			FROM 
+				`tabSalary Slip` ss
+			LEFT JOIN 
+				`tabSalary Detail` sd ON ss.name = sd.parent
+			WHERE 
+				ss.start_date BETWEEN %(start_date)s AND %(end_date)s  
+				AND sd.salary_component IN (
+					SELECT sc.name 
+					FROM `tabSalary Component` sc 
+					WHERE sc.custom_is_allowance = 1 AND sc.disabled = 0
+					{filter_condition_salaryslip}
+				)
+			
+		""",params 
+		# {"start_date": start_date, "end_date": end_date}
+		, as_dict=True)
+
+		current_employees= []
+		
+		
+		current_employees = [
+			row["employee_id"] for row in frappe.db.sql(f"""
+				SELECT 
+					ss.employee AS employee_id
+				FROM 
+					`tabSalary Slip` ss
+				WHERE 
+					ss.start_date BETWEEN %(start_date)s AND %(end_date)s  
+					{filter_condition_salaryslip}
+			""",params
+			#   {"start_date": start_date, "end_date": end_date}
+			, as_dict=True)
+		]
+		params["current_employees"] = current_employees
 					
+		
+		
+
+		total_allowances_previous = frappe.db.sql(f"""
+			SELECT 
+				ss.employee AS employee_id,
+				ss.employee_name,
+				ss.designation,
+				sd.salary_component AS component_name,
+				sd.amount AS total_allowances,
+				"false" as tag
+			FROM 
+				`tabSalary Slip` ss
+			JOIN 
+				`tabSalary Detail` sd ON ss.name = sd.parent
+			WHERE 
+				ss.start_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s 
+				AND sd.salary_component IN (
+					SELECT sc.name 
+					FROM `tabSalary Component` sc 
+					WHERE sc.custom_is_allowance = 1 AND sc.disabled = 0
+				)
+				AND ss.employee IN %(current_employees)s
+				{filter_condition_salaryslip}
+			GROUP BY 
+				ss.employee, sd.salary_component
+		""", params 
+		# {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date , "current_employees": current_employees } 
+		, as_dict=True)
+		# frappe.msgprint(str(len(previous_employees)))
+
+		for row in total_allowances_current:
+			sig = 0
+			for row1 in total_allowances_previous:
+				if row1["tag"] == "false" and row["employee_id"] == row1["employee_id"] and row["component_name"] == row1["component_name"]:
+					diff = row["total_allowances"] - row1["total_allowances"]
+					if diff > 0:
+						doc.append("allowances", {
+							"employee_id": row["employee_id"],
+							"salary_component_type": row["component_name"],
+							"difference": row["total_allowances"] - row1["total_allowances"],
+							"employee_name": row["employee_name"],
+							"designation": row["designation"]
+						})
+					elif diff<0:
+						doc.append("allowances_cancelled", {
+						"employee_id": row["employee_id"],
+						"salary_component_type": row["component_name"],
+						"difference": row1["total_allowances"] - row["total_allowances"],
+						"employee_name": row["employee_name"],
+						"designation": row["designation"]
+					})
+					row1["tag"] = "true"
+					sig = 1
+					break
+
+			if sig!= 1:
+				doc.append("allowances", {
+					"employee_id": row["employee_id"],
+					"salary_component_type": row["component_name"],
+					"difference": row["total_allowances"],
+					"employee_name": row["employee_name"],
+					"designation": row["designation"]
+				})
+			
+		for row1 in total_allowances_previous:				
+			if row1["tag"] == "false":
+				doc.append("allowances_cancelled", {
+					"employee_id": row1["employee_id"],
+					"salary_component_type": row1["component_name"],
+					"difference": row1["total_allowances"],
+					"employee_name": row1["employee_name"],
+					"designation": row1["designation"]
 				})
 
 
-		#For Excess Paid
+		#less paid ######################
+
+		current_month_salaries = frappe.db.sql(f"""
+			SELECT 
+				ss.employee AS employee_id,
+				ss.employee_name,
+				ss.designation,
+				SUM(CASE WHEN sd.salary_component IN ('House Rent Allowance', 'Basic', 'Medical', 'Utilities  Allowance') THEN sd.amount ELSE 0 END) AS total_amount
+			
+			FROM 
+				`tabSalary Slip` ss
+			LEFT JOIN 
+				`tabSalary Detail` sd ON ss.name = sd.parent
+			WHERE 
+				ss.start_date BETWEEN %(start_date)s AND %(end_date)s
+				{filter_condition_salaryslip}
+				# AND sd.salary_component IN ('House Allowance', 'Basic', 'Medical', 'Utility Allowance')
+				
+			GROUP BY 
+				ss.employee
+		""",params 
+		# {"start_date": start_date, "end_date": end_date, "employee_id":employee_id} 
+		, as_dict=True)
+
+
+		previous_month_salaries = frappe.db.sql(f"""
+			SELECT 
+				ss.employee AS employee_id,
+				ss.employee_name,
+				ss.designation,
+				SUM(CASE WHEN sd.salary_component IN ('House Rent Allowance', 'Basic', 'Medical', 'Utilities  Allowance', 'Increment') THEN sd.amount ELSE 0 END) AS total_amount
+			FROM 
+				`tabSalary Slip` ss
+			LEFT JOIN 
+				`tabSalary Detail` sd ON ss.name = sd.parent
+			WHERE 
+				ss.end_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
+				AND ss.docstatus IN (0, 1)
+				{filter_condition_salaryslip}
+			GROUP BY 
+				ss.employee
+		""",
+		params
+		# {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date,"employee_id":employee_id}
+		, as_dict=True)
+		
+		current_map = {row['employee_id']: row for row in current_month_salaries}
+		previous_map = {row['employee_id']: row for row in previous_month_salaries}
+		doc.less_paid_last_month = []
+		# Loop through previous month's data, calculate the difference and append to `less_paid_last_month` table
+		for employee_id, prev_data in previous_map.items():
+			diff = 0
+			diff1 = 0
+			current_data = current_map.get(employee_id)
+			if current_data:
+				diff = current_data['total_amount'] - prev_data['total_amount']
+				diff1 = diff
+				if diff != 0 :
+					if diff1 < 0 :
+						diff1 = diff1 * (-1)
+					# If the difference is very small, set it to 0
+					if  diff1 > 0 and diff1 < 1:
+						diff = 0
+					# Append non-zero differences to the table
+					doc.append("less_paid_last_month", {
+						"employee": employee_id,
+						"employee_name": current_data['employee_name'],
+						"designation": current_data['designation'],
+						"amount": round(diff)
+					})
+
+
+
+
+
+
+
+
+
+
+
+		#For Excess Paid########################################################
 		doc.excess_paid_month = []
 		excess_paid_data = frappe.db.sql(f"""
 			SELECT 
-				ss.employee AS employee_id,ss.employee_name AS employee_name,ss.absent_days AS absent_days,ssa.base AS basic_salary,ss.designation AS designation
+				ss.employee AS employee_id,
+				ss.employee_name AS employee_name,
+				ss.designation,
+				se.salary_component,
+				se.amount
 			FROM 
 				`tabSalary Slip` ss
-			LEFT JOIN (
-				SELECT 
-					employee, 
-					base, 
-					MAX(from_date) AS latest_from_date
-				FROM 
-					`tabSalary Structure Assignment`
-				WHERE 
-					docstatus = 1
-				GROUP BY 
-					employee
-			) ssa ON ss.employee = ssa.employee
-
+			INNER JOIN `tabSalary Detail` se 
+				ON se.parent = ss.name AND se.parentfield = 'earnings'
 			WHERE 
-				ss.docstatus = 1
-				AND ss.posting_date BETWEEN %(start_date)s AND %(end_date)s
-				{employee1_filter}
-		""", {"start_date": start_date, "end_date": end_date, "employee_id" : employee_id}, as_dict=True)
+				ss.start_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
+				AND se.salary_component LIKE '%%Arrear%%' 
+				{filter_condition_salaryslip}
+			ORDER BY ss.start_date
+		""", params 
+		# {
+		# 	"prev_start_date": prev_start_date,
+		# 	"prev_end_date": prev_end_date,
+		# 	"employee_id":employee_id
+		# }
+		, as_dict=True)
 
-
-
+		# Process each employee's salary slip with arrears
 		for employee in excess_paid_data:
+			arrears_amount = employee["amount"] if employee["amount"] else 0  # Get arrears amount
 
-			base_salary = employee["basic_salary"] if employee["basic_salary"] else 0
-			absent_days = employee["absent_days"]
-			paid_days = 30 - absent_days
-			paid_salary = ( (base_salary / total_month_days) * absent_days)
-			if paid_salary > base_salary:
+			# Append to the arrears list in the document
+			doc.append("excess_paid_month", {
+				"employee_id": employee["employee_id"],
+				"employee_name": employee["employee_name"],
+				"designation": employee["designation"],
+				"arrears_type": employee["salary_component"],  # Name of the arrears component
+				"amount": round(arrears_amount)  # Amount of the arrears
+			})
 
-				doc.append("excess_paid_month", {
-					"employee_id": employee["employee_id"],"employee_name": employee["employee_name"],"designation": employee["designation"],"base_salary": base_salary,"paid_days" : paid_days,"paid_salary" : paid_salary
-					
-				})
+		
+
+
+
+
 
 		#total Salary
-		total_paid_current_month = frappe.db.sql(f"""
+		total_gross_current_month = frappe.db.sql(f"""
 			SELECT 
 				SUM(ss.gross_pay) AS basic_salary
 			FROM 
 				`tabSalary Slip` ss
 			WHERE 
-				ss.docstatus = 1
-				AND ss.start_date BETWEEN %(start_date)s AND %(end_date)s
-				{employee1_filter}
-		""", {"start_date": start_date, "end_date": end_date, "employee_id" : employee_id}, as_dict=True)
+				ss.docstatus IN (0,1)
+				AND ss.start_date = %(start_date)s AND ss.end_date = %(end_date)s
+				{filter_condition_salaryslip}
+			
+		""",params 
+		# {"start_date": start_date, "end_date": end_date, "employee_id" : employee_id}
+		, as_dict=True)
 
-		total_paid_last_month = frappe.db.sql(f"""
+
+		total_gross_last_month = frappe.db.sql(f"""
 			SELECT 
 				SUM(ss.gross_pay) AS basic_salary
 			FROM 
 				`tabSalary Slip` ss
+			WHERE
+				ss.docstatus IN (0,1)
+				AND ss.start_date = %(prev_start_date)s AND ss.end_date = %(prev_end_date)s
+				{filter_condition_salaryslip}
+		""",params 
+		# {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date, "employee_id" : employee_id}
+		, as_dict=True)
+
+
+
+		total_imbers_current_month = frappe.db.sql(f"""
+			SELECT 
+				SUM(CASE WHEN se.salary_component = 'Imprest Reimbursement' THEN se.amount ELSE 0 END) AS imprest_reimbursement
+		
+			FROM 
+				`tabSalary Slip` ss
+			LEFT JOIN
+				`tabSalary Detail` se ON se.parent = ss.name
 			WHERE 
-				ss.docstatus = 1
-				AND ss.start_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
-				{employee1_filter}
-		""", {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date, "employee_id" : employee_id}, as_dict=True)
+				ss.docstatus IN (0,1)
+				AND ss.start_date = %(start_date)s 
+				AND ss.end_date = %(end_date)s
+				{filter_condition_salaryslip}
+			
+		""", params 
+		# {"start_date": start_date, "end_date": end_date, "employee_id" : employee_id}
+		, as_dict=True)
+
+		total_imbers_last_month = frappe.db.sql(f"""
+			SELECT 
+				SUM(CASE WHEN se.salary_component = 'Imprest Reimbursement' THEN se.amount ELSE 0 END) AS imprest_reimbursement
+				
+			FROM 
+				`tabSalary Slip` ss
+			LEFT JOIN
+				`tabSalary Detail` se ON se.parent = ss.name
+			WHERE 
+				ss.docstatus IN (0,1)
+				AND ss.start_date = %(prev_start_date)s 
+				AND ss.end_date = %(prev_end_date)s
+				{filter_condition_salaryslip}
+		""", params 
+		# {"prev_start_date": prev_start_date, "prev_end_date": prev_end_date, "employee_id" : employee_id}
+		, as_dict=True)
 
 
-		if total_paid_current_month:
-			total_current_basic_salary = total_paid_current_month[0].get('basic_salary', 0)
-			doc.salary_paid_current_month = total_current_basic_salary if total_current_basic_salary is not None else 0
-		else:
-			doc.salary_paid_current_month = 0
+		# Extract the basic_salary values (assuming a single result will be returned)
+		salary_paid_current_month = total_gross_current_month[0]['basic_salary'] - total_imbers_current_month[0]['imprest_reimbursement']  if total_gross_current_month else 0
+		salary_paid_last_month = total_gross_last_month[0]['basic_salary'] - total_imbers_last_month[0]['imprest_reimbursement'] if total_gross_last_month else 0
+		# frappe.msgprint(str(total_paid_current_month[0]['imprest_reimbursement']) + str(total_paid_current_month[0]['basic_salary']))
+		# frappe.msgprint(str(total_paid_last_month[0]['imprest_reimbursement']) + str(total_paid_last_month[0]['basic_salary']))
+		# frappe.msgprint(str(total_imbers_current_month[0]['imprest_reimbursement']))
+		# frappe.msgprint(str(total_imbers_last_month[0]['imprest_reimbursement']))
 
-		if total_paid_last_month:
-			total_last_basic_salary = total_paid_last_month[0].get('basic_salary', 0)
-			doc.salary_paid_last_month = total_last_basic_salary if total_last_basic_salary is not None else 0
-		else:
-			doc.salary_paid_last_month = 0
+		# Assign the values to the respective fields in the document
+		doc.salary_paid_current_month = salary_paid_current_month
+		doc.salary_paid_last_month = salary_paid_last_month
 
-		# Ensure both are floats
-		doc.salary_paid_current_month = float(doc.salary_paid_current_month)
-		doc.salary_paid_last_month = float(doc.salary_paid_last_month)
+		# Calculate the total difference (sum of current and previous month's salary)
+		doc.total_difference = abs(salary_paid_current_month - salary_paid_last_month)
 
-		# Calculate total difference
-		doc.total_difference = doc.salary_paid_current_month - doc.salary_paid_last_month
 
-		# Ensure total_difference is positive
-		if doc.total_difference < 0:
-			doc.total_difference = doc.total_difference * -1
+		total1 = 0
+		total2 = 0
+
+		# Summing total1
+		for i in doc.table_qase:
+			total1 += i.paid_salary or 0
+		for i in doc.arrears:
+			total1 += i.amount or 0
+		for i in doc.table_robb:
+			total1 += i.increment_amount or 0
+		for i in doc.allowances:
+			total1 += i.difference or 0
+		for i in doc.less_paid_last_month:
+			total1 += i.amount or 0
+		doc.total1 = total1
+
+		# Summing total2
+		for i in doc.leavers:
+			total2 += i.base_salary or 0
+		for i in doc.excess_paid_month:
+			total2 += i.amount or 0
+		for i in doc.allowances_cancelled:
+			total2 += i.difference or 0
+		doc.total2 = total2
+
+		# Calculate the difference
+		doc.difference = doc.total1 - doc.total2
+		

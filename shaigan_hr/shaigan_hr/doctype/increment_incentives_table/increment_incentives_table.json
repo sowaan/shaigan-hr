@@ -9,6 +9,7 @@
   "employee_id",
   "employee_name",
   "designation",
+  "increment_days",
   "increment_amount"
  ],
  "fields": [
@@ -32,12 +33,17 @@
    "fieldname": "increment_amount",
    "fieldtype": "Float",
    "label": "Increment Amount"
+  },
+  {
+   "fieldname": "increment_days",
+   "fieldtype": "Int",
+   "label": "Increment Days"
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-12-09 15:18:07.191993",
+ "modified": "2025-01-10 00:16:58.674011",
  "modified_by": "Administrator",
  "module": "Shaigan HR",
  "name": "Increment Incentives Table",

@@ -20,7 +20,7 @@ fixtures = [
       "doctype" : "Print Format",
       "filters" : [
         [  
-          "name" , "=" , "Reconciliation Report Print"
+          "name", "IN", ["Reconciliation Report Print", "Payorder Report"]
         ]
       ]
     }

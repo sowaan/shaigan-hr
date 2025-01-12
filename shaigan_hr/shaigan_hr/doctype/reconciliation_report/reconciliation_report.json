@@ -8,10 +8,13 @@
   "section_break_ume0",
   "amended_from",
   "start_date",
+  "company",
   "employee",
   "salary_paid_last_month",
   "column_break_htvb",
   "end_date",
+  "branch",
+  "department",
   "salary_paid_current_month",
   "total_difference",
   "joiners_section",
@@ -29,7 +32,12 @@
   "less_paid_last_month_section",
   "less_paid_last_month",
   "excess_paid_last_month_section",
-  "excess_paid_month"
+  "excess_paid_month",
+  "section_break_loek",
+  "total1",
+  "difference",
+  "column_break_wboy",
+  "total2"
  ],
  "fields": [
   {
@@ -77,6 +85,7 @@
    "label": "Joiners"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "table_qase",
    "fieldtype": "Table",
    "options": "Reconciliation Report Table"
@@ -88,6 +97,7 @@
    "label": "Leavers"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "leavers",
    "fieldtype": "Table",
    "label": "Leavers",
@@ -100,10 +110,11 @@
    "label": "Arrears"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "arrears",
    "fieldtype": "Table",
    "label": "Arrears",
-   "options": "Reconciliation Report Table"
+   "options": "Arrears Table"
   },
   {
    "collapsible": 1,
@@ -112,6 +123,7 @@
    "label": "Increment / Incentives"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "table_robb",
    "fieldtype": "Table",
    "options": "Increment Incentives Table"
@@ -123,6 +135,7 @@
    "label": "Allowances"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "allowances",
    "fieldtype": "Table",
    "label": "Allowances",
@@ -135,6 +148,7 @@
    "label": "Allowances Cancelled"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "allowances_cancelled",
    "fieldtype": "Table",
    "label": "Allowances Cancelled",
@@ -147,10 +161,11 @@
    "label": "Less Paid Last Month"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "less_paid_last_month",
    "fieldtype": "Table",
    "label": "Less Paid Last Month",
-   "options": "Reconciliation Report Table"
+   "options": "Less Paid Table"
   },
   {
    "collapsible": 1,
@@ -159,10 +174,11 @@
    "label": "Excess Paid Last Month"
   },
   {
+   "allow_bulk_edit": 1,
    "fieldname": "excess_paid_month",
    "fieldtype": "Table",
    "label": "Excess Paid Month",
-   "options": "Reconciliation Report Table"
+   "options": "Arrears Table"
   },
   {
    "fieldname": "salary_paid_last_month",
@@ -178,12 +194,53 @@
    "fieldname": "total_difference",
    "fieldtype": "Float",
    "label": "Total Difference"
+  },
+  {
+   "fieldname": "section_break_loek",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total1",
+   "fieldtype": "Float",
+   "label": "Total1"
+  },
+  {
+   "fieldname": "difference",
+   "fieldtype": "Float",
+   "label": "Difference"
+  },
+  {
+   "fieldname": "column_break_wboy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total2",
+   "fieldtype": "Float",
+   "label": "Total2"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2024-12-10 12:51:07.500520",
+ "modified": "2025-01-11 16:26:33.330485",
  "modified_by": "Administrator",
  "module": "Shaigan HR",
  "name": "Reconciliation Report",
