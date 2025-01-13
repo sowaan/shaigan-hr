@@ -1,0 +1,25 @@
+[
+ {
+  "align": "Left",
+  "content": null,
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Letter Head",
+  "footer": "<br>\n\n<table style=\"width:100%;\">\n    <tbody><tr>\n        <td style=\"width:25%;border-top:1px solid black;font-weight:bold;font-size:7px;\">\n            Basil Ahmed<br>\n            Director \n        </td>\n        <td style=\"width:50%;\">\n            \n        </td>\n        <td style=\"width:25%;border-top:1px solid black;font-weight:bold;font-size:7px;\">\n            Sheikh Atif Aziz<br>\n            GM Finance \n        </td>\n    </tr>\n</tbody></table>\n\n<br>\n\n<table style=\"width:100%;\">\n    <tbody><tr>\n        <td style=\"width:25%;border-top:1px solid black;font-weight:bold;font-size:7px;\">\n            Muhammad Kabir Saleh<br>\n            Director Operations \n        </td>\n        <td style=\"width:50%;\">\n            \n        </td>\n        <td style=\"width:25%;border-top:1px solid black;font-weight:bold;font-size:7px;\">\n            Aasim Ahmed<br>\n            Executive Director\n        </td>\n    </tr>\n</tbody></table>",
+  "footer_align": "Left",
+  "footer_image": null,
+  "footer_image_height": 0.0,
+  "footer_image_width": 0.0,
+  "footer_script": null,
+  "footer_source": "HTML",
+  "header_script": null,
+  "image": null,
+  "image_height": 0.0,
+  "image_width": 0.0,
+  "is_default": 1,
+  "letter_head_name": "Payorder Report Letter Head",
+  "modified": "2025-01-13 12:19:30.111089",
+  "name": "Payorder Report Letter Head",
+  "source": "Image"
+ }
+]

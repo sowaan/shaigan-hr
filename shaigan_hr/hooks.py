@@ -23,6 +23,14 @@ fixtures = [
           "name", "IN", ["Reconciliation Report Print", "Payorder Report"]
         ]
       ]
+    },
+    {
+      "doctype" : "Letter Head",
+      "filters" : [
+        [  
+          "name", "=" , "Payorder Report Letter Head"
+        ]
+      ]
     }
 ]
 
