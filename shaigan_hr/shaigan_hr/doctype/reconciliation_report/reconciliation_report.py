@@ -138,9 +138,9 @@ class ReconciliationReport(Document):
 				"employee_id": employee["employee_id"],
 				"employee_name": employee["employee_name"],
 				"designation": employee["designation"],
-				"base_salary": adjusted_base_salary,
+				"base_salary": round(adjusted_base_salary),
 				"paid_days": days_diff,
-				"paid_salary": adjusted_base_salary
+				"paid_salary": round(adjusted_base_salary)
 			})
 
 
@@ -194,7 +194,7 @@ class ReconciliationReport(Document):
 				"employee_id": employee["employee_id"],
 				"employee_name": employee["employee_name"],
 				"designation": employee["designation"],
-				"base_salary": adjusted_gross_pay
+				"base_salary": round(adjusted_gross_pay)
 			})
 
 
@@ -240,7 +240,7 @@ class ReconciliationReport(Document):
 				"employee_name": employee["employee_name"],
 				"designation": employee["designation"],
 				"arrears_type": employee["salary_component"],  # Name of the arrears component
-				"amount": arrears_amount  # Amount of the arrears
+				"amount": round(arrears_amount)  # Amount of the arrears
 			})
 
 
@@ -407,7 +407,7 @@ class ReconciliationReport(Document):
 						doc.append("allowances", {
 							"employee_id": row["employee_id"],
 							"salary_component_type": row["component_name"],
-							"difference": row["total_allowances"] - row1["total_allowances"],
+							"difference": round(row["total_allowances"] - row1["total_allowances"]),
 							"employee_name": row["employee_name"],
 							"designation": row["designation"]
 						})
@@ -415,7 +415,7 @@ class ReconciliationReport(Document):
 						doc.append("allowances_cancelled", {
 						"employee_id": row["employee_id"],
 						"salary_component_type": row["component_name"],
-						"difference": row1["total_allowances"] - row["total_allowances"],
+						"difference": round(row1["total_allowances"] - row["total_allowances"]),
 						"employee_name": row["employee_name"],
 						"designation": row["designation"]
 					})
@@ -427,7 +427,7 @@ class ReconciliationReport(Document):
 				doc.append("allowances", {
 					"employee_id": row["employee_id"],
 					"salary_component_type": row["component_name"],
-					"difference": row["total_allowances"],
+					"difference": round(row["total_allowances"]),
 					"employee_name": row["employee_name"],
 					"designation": row["designation"]
 				})
@@ -437,7 +437,7 @@ class ReconciliationReport(Document):
 				doc.append("allowances_cancelled", {
 					"employee_id": row1["employee_id"],
 					"salary_component_type": row1["component_name"],
-					"difference": row1["total_allowances"],
+					"difference": round(row1["total_allowances"]),
 					"employee_name": row1["employee_name"],
 					"designation": row1["designation"]
 				})
