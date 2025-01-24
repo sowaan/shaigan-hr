@@ -157,16 +157,11 @@ override_doctype_class = {
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# 	"Salary Slip":{
-# 		"before_save": "shaigan_hr.shaigan_hr.overrides.override_arrears_process.add_arrears_to_earnings"
-# 	}
-# }
+doc_events = {
+	"Designation":{
+		"before_save": "shaigan_hr.shaigan_hr.events.designation.designation_allowance_update"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
