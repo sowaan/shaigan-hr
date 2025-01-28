@@ -63,7 +63,7 @@ class OverrideSalarySlip(SalarySlip):
         date_of_joining = frappe.db.get_value('Employee' , self.employee , 'date_of_joining')
 
         if str(date_of_joining) > str(self.start_date) and str(date_of_joining) <= str(self.end_date) :
-            joining_date_days_diff = frappe.utils.date_diff(date_of_joining , self.start_date)
+            joining_date_days_diff = frappe.utils.date_diff(date_of_joining , self.start_date) - 1
 
         base = 0
 
@@ -327,7 +327,6 @@ class OverrideSalarySlip(SalarySlip):
                     else:
                         salary_structure = frappe.get_doc("Salary Structure Assignment",salary_structure_list[0].name)
                         base = (salary_structure.base*0.60003+ salary_structure.base*0.06667) * 0.0833
-                        # print(base, "pf Salary Slip 330 \n")
                         employee_arrears_list = frappe.get_all("Employee Arrears",
                                                                         {
                                                                             "employee":self.employee,

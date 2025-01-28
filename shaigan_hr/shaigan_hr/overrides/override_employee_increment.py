@@ -12,6 +12,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			"docstatus": 1,
 			"currency": salary_sturcture.currency
 		})
+		
 		salary_sturcture = frappe.get_doc({
 			"doctype": "Salary Structure Assignment",
 			"employee": self.employee,
@@ -50,12 +51,13 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			last_salary_slip.validate()
 
 			end_date_ = add_days(self.increment_date, -1)
+			print(end_date_, "end_date_ \n\n\n\n")
 
 			curr_basic = 0
 			for x in last_salary_slip.earnings:
 				# if x.salary_component == 'Basic':
 				curr_basic = curr_basic + x.amount
-
+			print(curr_basic, "curr_basic \n\n\n\n")
 			salary_slip = frappe.get_doc({
 				"doctype": "Salary Slip",
 				"employee": self.employee,
@@ -67,13 +69,15 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 				"company": self.company
 			})
 			salary_slip.validate()
-			absent_days = frappe.utils.date_diff(end_date, end_date_) 
+			print(salary_slip.custom_base, "base \n\n\n\n")
+			absent_days = frappe.utils.date_diff(end_date, end_date_)
+			print(absent_days, "absent_days \n\n\n\n")
 		# 	if  allow_manual_att == "Yes":
 			s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
 				"employee": self.employee,
 				"from_date": ["<=", start_date],
 				"docstatus": 1
-			})
+			}, order_by="from_date desc")
 			per_day = s_s_assignment.base / salary_slip.custom_payment_day
 			salary_slip.custom_payment_day =  salary_slip.custom_payment_day - absent_days
 			salary_slip.custom_base = per_day * salary_slip.custom_payment_day
@@ -96,6 +100,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 				"company": self.company
 			})
 			salary_slip1.validate()
+			print(salary_slip1.custom_base, "base \n\n\n\n")
 
 			absent_days = frappe.utils.date_diff(end_date_, start_date) 
 			
@@ -104,7 +109,8 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 				"employee": self.employee,
 				"from_date": ["<=", self.increment_date],
 				"docstatus": 1
-			})
+			}, order_by="from_date desc")
+
 			per_day = s_s_assignment.base / salary_slip1.custom_payment_day
 			salary_slip1.custom_payment_day =  salary_slip1.custom_payment_day - absent_days
 			salary_slip1.custom_base = per_day * salary_slip1.custom_payment_day
@@ -152,7 +158,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 								# print(f_salary.salary_component, f_salary.amount, s_salary.amount, d_salary.amount, "f_salary.amount \n\n\n\n")
 								arrears_basic = (s_salary.amount + f_salary.amount) - d_salary.amount
 								total_earning = total_earning + arrears_basic
-								c_salary.amount = arrears_basic
+								c_salary.amount = abs(arrears_basic)
 
 								break
 			
@@ -177,10 +183,6 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 				total_deduction = total_deduction + arrears_basic
 				c_salary.amount = arrears_basic
 
-			emp_arrears.total_earning = total_earning
-			emp_arrears.total_deduction = total_deduction
-			emp_arrears.insert(ignore_permissions=True)
-			
 			arears_amount = 0
 			sal_1_basic = 0
 
@@ -196,7 +198,14 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 						sal_2_basic = sal_2_basic + x.amount
 
 			total_basic = sal_2_basic + sal_1_basic   
-			arears_amount = total_basic - curr_basic
+			arears_amount = abs(total_basic - curr_basic)
+			print(arears_amount, "arears_amount \n\n\n\n")
+
+			emp_arrears.total_earning = total_earning
+			emp_arrears.total_deduction = total_deduction
+			emp_arrears.insert(ignore_permissions=True)
+			
+			
 			
 			arrears = frappe.get_doc({
 				"doctype": "Arrears Process",
@@ -243,7 +252,9 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			["employee", "=", self.employee],
 			["from_date", "<=", self.increment_date],
 			["docstatus", "=", 1]
-		])
+		], order_by="from_date desc")
+		# print(get_last_salary_structure.base)
+		# print(get_last_salary_structure, "get_last_salary_structure \n\n\n\n")
 
 		return get_last_salary_structure
 
