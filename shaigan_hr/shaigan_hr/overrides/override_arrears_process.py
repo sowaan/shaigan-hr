@@ -47,7 +47,7 @@ class OverrideArrearsProcess(ArrearsProcess):
 			employees_list = frappe.get_all("Salary Structure Assignment", filters=filters, fields=['employee'], distinct=True)
 		else:
 			filters = [
-				["increment_date", ">", self.from_date],
+				["increment_date", ">=", self.from_date],
 				["increment_date", "<=", self.to_date],
 				["docstatus", "=", 1]
 			]
