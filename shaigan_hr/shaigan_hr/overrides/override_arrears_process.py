@@ -117,7 +117,6 @@ class OverrideArrearsProcess(ArrearsProcess):
 					self_from_date = datetime.strptime(self.from_date, '%Y-%m-%d').date()
 					sal_1_basic = 0
 					if add_days(salary_structure_assignment.from_date, -1) > self_from_date:
-						frappe.throw(str(add_days(salary_structure_assignment.from_date, -1)))	
 						first_salary = self.get_salary_slip(emp.employee, self.from_date, add_days(salary_structure_assignment.from_date, -1), absent_days)
 					
 					# s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
@@ -268,7 +267,7 @@ class OverrideArrearsProcess(ArrearsProcess):
 						"Salary Structure Assignment",
 						filters=[
 							["employee", "=", emp.employee],
-							["from_date", ">", self.from_date],
+							["from_date", ">=", self.from_date],
 							["from_date", "<=", self.to_date],
 							["docstatus", "=", 1]
 						],
@@ -287,46 +286,26 @@ class OverrideArrearsProcess(ArrearsProcess):
 						"docstatus": 1
 					}, order_by="from_date desc")
 
-					# per_day = s_s_assignment.base / first_salary.custom_payment_day
-					# default_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days
 					default_salary.custom_base = s_s_assignment.base
-					# default_salary.custom_absent_deduction = per_day * absent_days
 					default_salary.custom_monthly_salary = s_s_assignment.base
-					# default_salary.payment_days =  first_salary.payment_days - absent_days
 					default_salary.calculate_net_pay()
-					# frappe.msgprint('default_salary: ' + str(default_salary.net_pay))
 
 					absent_days = frappe.utils.date_diff(self.to_date, add_days(salary_structure_assignment.from_date, -1))
-					# frappe.msgprint('absent_days: ' + str(absent_days))
-					# frappe.msgprint(str(add_days(salary_structure_assignment.from_date, -1)))
-					first_salary = self.get_salary_slip(emp.employee, self.from_date, add_days(salary_structure_assignment.from_date, -1), absent_days)
-					
-					# s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
-					# 	"employee": emp.employee,
-					# 	"from_date": ["<=", self.from_date],
-					# 	"docstatus": 1
-					# })
-					# frappe.msgprint('s_s_assignment: ' + str(s_s_assignment))
-					per_day = s_s_assignment.base / first_salary.custom_payment_day
-					first_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days
-					first_salary.custom_base = per_day * first_salary.custom_payment_day
-					first_salary.custom_absent_deduction = per_day * absent_days
-					first_salary.custom_monthly_salary = s_s_assignment.base
-					first_salary.payment_days =  first_salary.payment_days - absent_days
-					first_salary.calculate_net_pay()
-					# frappe.msgprint('first_salary: ' + str(first_salary.net_pay))
-					
+					self_from_date = datetime.strptime(self.from_date, '%Y-%m-%d').date()
+					if add_days(salary_structure_assignment.from_date, -1) > self_from_date:
+						first_salary = self.get_salary_slip(emp.employee, self.from_date, add_days(salary_structure_assignment.from_date, -1), absent_days)
+						per_day = s_s_assignment.base / first_salary.custom_payment_day
+						first_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days
+						first_salary.custom_base = per_day * first_salary.custom_payment_day
+						first_salary.custom_absent_deduction = per_day * absent_days
+						first_salary.custom_monthly_salary = s_s_assignment.base
+						first_salary.payment_days =  first_salary.payment_days - absent_days
+						first_salary.calculate_net_pay()
+					else:
+						first_salary = None
 					
 					second_salary = self.get_salary_slip(emp.employee, salary_structure_assignment.from_date, self.to_date)
 					absent_days = frappe.utils.date_diff(salary_structure_assignment.from_date, self.from_date)
-					
-					# frappe.msgprint('absent_days: ' + str(absent_days))
-					# s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
-					# 	"employee": emp.employee,
-					# 	"from_date": ["<=", salary_structure_assignment.from_date],
-					# 	"docstatus": 1
-					# })
-					# frappe.msgprint('salary_structure_assignment: ' + str(salary_structure_assignment))
 					per_day = salary_structure_assignment.base / second_salary.custom_payment_day
 					second_salary.custom_payment_day =  second_salary.custom_payment_day - (absent_days)
 					second_salary.custom_base = per_day * second_salary.custom_payment_day
@@ -334,8 +313,8 @@ class OverrideArrearsProcess(ArrearsProcess):
 					second_salary.custom_monthly_salary = salary_structure_assignment.base
 					second_salary.payment_days =  second_salary.payment_days - (absent_days)
 					second_salary.calculate_net_pay() 
-						
-						
+					
+					
 					emp_arrears = frappe.get_doc({
 						"doctype": "Employee Arrears",
 						"employee": emp.employee,
@@ -363,37 +342,62 @@ class OverrideArrearsProcess(ArrearsProcess):
 							})
 
 					em_arr_total_earning = 0
-					for f_salary in first_salary.earnings:
+					if first_salary:
+						for f_salary in first_salary.earnings:
+							for s_salary in second_salary.earnings:
+								for d_salary in default_salary.earnings:
+									for c_salary in emp_arrears.e_a_earnings:
+										if f_salary.salary_component == s_salary.salary_component == d_salary.salary_component == c_salary.salary_component:
+											arrears_basic = (s_salary.amount + f_salary.amount) - d_salary.amount
+											c_salary.amount = abs(arrears_basic)
+											em_arr_total_earning =  em_arr_total_earning + c_salary.amount
+											break
+					else:
 						for s_salary in second_salary.earnings:
 							for d_salary in default_salary.earnings:
 								for c_salary in emp_arrears.e_a_earnings:
-									if f_salary.salary_component == s_salary.salary_component == d_salary.salary_component == c_salary.salary_component:
-										arrears_basic = (s_salary.amount + f_salary.amount) - d_salary.amount
+									if s_salary.salary_component == d_salary.salary_component == c_salary.salary_component:
+										arrears_basic = s_salary.amount - d_salary.amount
 										c_salary.amount = abs(arrears_basic)
-										em_arr_total_earning =  em_arr_total_earning + c_salary.amount
+										em_arr_total_earning += c_salary.amount
 										break
 					
 					emp_arrears.total_earning = em_arr_total_earning
 
 					em_arr_total_deduction = 0
-					for c_salary in emp_arrears.e_a_deductions:
-						arrears_basic = 0
-						for f_salary in first_salary.deductions:
-							if f_salary.salary_component == c_salary.salary_component:
-								arrears_basic += f_salary.amount
-								break
+					if first_salary:
+						for c_salary in emp_arrears.e_a_deductions:
+							arrears_basic = 0
+							for f_salary in first_salary.deductions:
+								if f_salary.salary_component == c_salary.salary_component:
+									arrears_basic += f_salary.amount
+									break
 
-						for s_salary in second_salary.deductions:
-							if s_salary.salary_component == c_salary.salary_component:
-								arrears_basic += s_salary.amount
-								break
+							for s_salary in second_salary.deductions:
+								if s_salary.salary_component == c_salary.salary_component:
+									arrears_basic += s_salary.amount
+									break
 
-						for d_salary in default_salary.deductions:
-							if d_salary.salary_component == c_salary.salary_component:
-								arrears_basic -= d_salary.amount
-								break
-						c_salary.amount = abs(arrears_basic)
-						em_arr_total_deduction = em_arr_total_deduction + c_salary.amount
+							for d_salary in default_salary.deductions:
+								if d_salary.salary_component == c_salary.salary_component:
+									arrears_basic -= d_salary.amount
+									break
+							c_salary.amount = abs(arrears_basic)
+							em_arr_total_deduction = em_arr_total_deduction + c_salary.amount
+					else:
+						for c_salary in emp_arrears.e_a_deductions:
+							arrears_basic = 0
+							for s_salary in second_salary.deductions:
+								if s_salary.salary_component == c_salary.salary_component:
+									arrears_basic += s_salary.amount
+									break
+
+							for d_salary in default_salary.deductions:
+								if d_salary.salary_component == c_salary.salary_component:
+									arrears_basic -= d_salary.amount
+									break
+							c_salary.amount = abs(arrears_basic)
+							em_arr_total_deduction += c_salary.amount
 
 					emp_arrears.total_deduction = em_arr_total_deduction
 					emp_arrears_exit = self.get_employee_arrears(emp.employee, self.from_date, self.to_date, self.salary_component)
