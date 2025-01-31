@@ -1,6 +1,6 @@
 import frappe
 from datetime import datetime
-from frappe.utils import now, add_days
+from frappe.utils import now, add_days, date_diff
 from sowaan_hr.sowaan_hr.doctype.arrears_process.arrears_process import ArrearsProcess
 
 class OverrideArrearsProcess(ArrearsProcess):
@@ -68,12 +68,10 @@ class OverrideArrearsProcess(ArrearsProcess):
 						filter_employee.append(emp)
 				employees_done = []
 				for emp in filter_employee:
-					# frappe.msgprint(str(emp))
 					if frappe.db.get_value("Employee", emp.employee, "status") == "Active" and emp.employee in employees_done:
 						continue
 
 					employees_done.append(emp.employee)
-					# frappe.msgprint(str(employees_done))
 					
 					salary_structure_assignment_list = frappe.get_all(
 						"Salary Structure Assignment",
@@ -86,12 +84,10 @@ class OverrideArrearsProcess(ArrearsProcess):
 						fields=['name', 'from_date', 'base'],
 						order_by="from_date desc"
 					)
-					# frappe.throw('salary_structure_assignment_list: ' + str(salary_structure_assignment_list))
 					if not salary_structure_assignment_list:
 						continue
-
+					# Latest salary assignment
 					salary_structure_assignment = salary_structure_assignment_list[0]
-					# frappe.throw('salary_structure_assignment_list: ' + str(salary_structure_assignment))
 				
 					default_salary = self.get_salary_slip(emp.employee, self.from_date, self.to_date)
 					s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
@@ -99,38 +95,59 @@ class OverrideArrearsProcess(ArrearsProcess):
 						"from_date": ["<", salary_structure_assignment.from_date],
 						"docstatus": 1
 					}, order_by="from_date desc")
-					# frappe.throw('salary_structure_assignment: ' + str(s_s_assignment))
 
-					# per_day = s_s_assignment.base / first_salary.custom_payment_day
-					# default_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days
 					default_salary.custom_base = s_s_assignment.base
-					# default_salary.custom_absent_deduction = per_day * absent_days
 					default_salary.custom_monthly_salary = s_s_assignment.base
-					# default_salary.payment_days =  first_salary.payment_days - absent_days
 					default_salary.calculate_net_pay()
-					# frappe.msgprint('default_salary: ' + str(default_salary.net_pay))
 
 					
-					absent_days = frappe.utils.date_diff(self.to_date, add_days(salary_structure_assignment.from_date, -1))
-					# frappe.msgprint('absent_days: ' + str(absent_days))
-					# frappe.msgprint(str(self.from_date))
+					absent_days_first = frappe.utils.date_diff(self.to_date, add_days(salary_structure_assignment.from_date, -1))
+					absent_days_second = frappe.utils.date_diff(salary_structure_assignment.from_date, self.from_date)
+					from_date = str(salary_structure_assignment.from_date)
+					day_of_from_date = datetime.strptime(from_date, "%Y-%m-%d").day
+					date_diff = frappe.utils.date_diff(self.to_date, self.from_date) + 1
+					# print(type(day_of_from_date), day_of_from_date, "\n\n\n\n\n")
+					# frappe.throw(str(type(day_of_from_date)))
+					# frappe.msgprint(str(absent_days_first))
+					# frappe.msgprint(str(absent_days_second))
+					# frappe.msgprint(f"sa {salary_structure_assignment.from_date.day()}")
+					if day_of_from_date in [26, 27, 28, 29, 30, 31]:
+						# frappe.throw(f"sa {salary_structure_assignment.from_date}")
+						# frappe.msgprint("if")
+						# frappe.msgprint(from_date)
+						
+						if date_diff > 30:
+							absent_days_first = absent_days_first - (date_diff - 30)
+						elif date_diff < 30:
+							absent_days_first = absent_days_first + (30 - date_diff)
+					else:
+						# frappe.msgprint("else")
+						# frappe.msgprint(from_date)
+						if date_diff > 30:
+							absent_days_second = absent_days_second - (date_diff - 30)
+						elif date_diff < 30:
+							absent_days_second = absent_days_second + (30 - date_diff)
+					# frappe.msgprint(str(absent_days_first))
+					# frappe.msgprint(str(absent_days_second))
+					
+
+					
 					self_from_date = datetime.strptime(self.from_date, '%Y-%m-%d').date()
 					sal_1_basic = 0
 					if add_days(salary_structure_assignment.from_date, -1) > self_from_date:
-						first_salary = self.get_salary_slip(emp.employee, self.from_date, add_days(salary_structure_assignment.from_date, -1), absent_days)
+						first_salary = self.get_salary_slip(emp.employee, self.from_date, add_days(salary_structure_assignment.from_date, -1), absent_days=absent_days_first)
 					
 					# s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
 					# 	"employee": emp.employee,
 					# 	"from_date": ["<=", self.from_date],
 					# 	"docstatus": 1
 					# })
-					# frappe.msgprint('s_s_assignment: ' + str(s_s_assignment))
 						per_day = s_s_assignment.base / first_salary.custom_payment_day
-						first_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days
+						first_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days_first
 						first_salary.custom_base = per_day * first_salary.custom_payment_day
-						first_salary.custom_absent_deduction = per_day * absent_days
+						first_salary.custom_absent_deduction = per_day * absent_days_first
 						first_salary.custom_monthly_salary = s_s_assignment.base
-						first_salary.payment_days =  first_salary.payment_days - absent_days
+						first_salary.payment_days =  first_salary.payment_days - absent_days_first
 						first_salary.calculate_net_pay()
 						for x in first_salary.earnings:
 							for d in self.a_p_earnings:
@@ -143,8 +160,8 @@ class OverrideArrearsProcess(ArrearsProcess):
 					
 					
 					second_salary = self.get_salary_slip(emp.employee, salary_structure_assignment.from_date, self.to_date)
-					absent_days = frappe.utils.date_diff(salary_structure_assignment.from_date, self.from_date)
-
+					
+					
 					# frappe.msgprint('absent_days: ' + str(absent_days))
 					# s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
 					# 	"employee": emp.employee,
@@ -153,11 +170,11 @@ class OverrideArrearsProcess(ArrearsProcess):
 					# })
 					# frappe.msgprint('salary_structure_assignment: ' + str(salary_structure_assignment))
 					per_day = salary_structure_assignment.base / second_salary.custom_payment_day
-					second_salary.custom_payment_day =  second_salary.custom_payment_day - (absent_days)
+					second_salary.custom_payment_day =  second_salary.custom_payment_day - (absent_days_second)
 					second_salary.custom_base = per_day * second_salary.custom_payment_day
-					second_salary.custom_absent_deduction = per_day * (absent_days)
+					second_salary.custom_absent_deduction = per_day * (absent_days_second)
 					second_salary.custom_monthly_salary = salary_structure_assignment.base
-					second_salary.payment_days =  second_salary.payment_days - (absent_days)
+					second_salary.payment_days =  second_salary.payment_days - (absent_days_second)
 					second_salary.calculate_net_pay() 
 					# frappe.msgprint('second_salary: ' + str(second_salary.net_pay))
 					
@@ -175,7 +192,8 @@ class OverrideArrearsProcess(ArrearsProcess):
 								curr_basic = curr_basic + x.amount
 						
 					total_basic = sal_2_basic + sal_1_basic   
-					arrears_basic = abs(total_basic - curr_basic)
+					arrears_basic = total_basic - curr_basic
+					# arrears_basic = abs(total_basic - curr_basic)
 					# if arrears_basic < 0:
 					# 	arrears_basic = arrears_basic * -1
 					# frappe.msgprint('total_basic: ' + str(total_basic))
@@ -290,28 +308,49 @@ class OverrideArrearsProcess(ArrearsProcess):
 					default_salary.custom_monthly_salary = s_s_assignment.base
 					default_salary.calculate_net_pay()
 
-					absent_days = frappe.utils.date_diff(self.to_date, add_days(salary_structure_assignment.from_date, -1))
+
+
+					absent_days_first = frappe.utils.date_diff(self.to_date, add_days(salary_structure_assignment.from_date, -1))
+					absent_days_second = frappe.utils.date_diff(salary_structure_assignment.from_date, self.from_date)
+					from_date = str(salary_structure_assignment.from_date)
+					day_of_from_date = datetime.strptime(from_date, "%Y-%m-%d").day
+					date_diff = frappe.utils.date_diff(self.to_date, self.from_date) + 1
+					if day_of_from_date in [26, 27, 28, 29, 30, 31]:
+						
+						if date_diff > 30:
+							absent_days_first = absent_days_first - (date_diff - 30)
+						elif date_diff < 30:
+							absent_days_first = absent_days_first + (30 - date_diff)
+					else:
+						if date_diff > 30:
+							absent_days_second = absent_days_second - (date_diff - 30)
+						elif date_diff < 30:
+							absent_days_second = absent_days_second + (30 - date_diff)
+
+						
+
+					# absent_days = frappe.utils.date_diff(self.to_date, add_days(salary_structure_assignment.from_date, -1))
 					self_from_date = datetime.strptime(self.from_date, '%Y-%m-%d').date()
 					if add_days(salary_structure_assignment.from_date, -1) > self_from_date:
-						first_salary = self.get_salary_slip(emp.employee, self.from_date, add_days(salary_structure_assignment.from_date, -1), absent_days)
+						first_salary = self.get_salary_slip(emp.employee, self.from_date, add_days(salary_structure_assignment.from_date, -1), absent_days=absent_days_first)
 						per_day = s_s_assignment.base / first_salary.custom_payment_day
-						first_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days
+						first_salary.custom_payment_day =  first_salary.custom_payment_day - absent_days_first
 						first_salary.custom_base = per_day * first_salary.custom_payment_day
-						first_salary.custom_absent_deduction = per_day * absent_days
+						first_salary.custom_absent_deduction = per_day * absent_days_first
 						first_salary.custom_monthly_salary = s_s_assignment.base
-						first_salary.payment_days =  first_salary.payment_days - absent_days
+						first_salary.payment_days =  first_salary.payment_days - absent_days_first
 						first_salary.calculate_net_pay()
 					else:
 						first_salary = None
 					
 					second_salary = self.get_salary_slip(emp.employee, salary_structure_assignment.from_date, self.to_date)
-					absent_days = frappe.utils.date_diff(salary_structure_assignment.from_date, self.from_date)
+					# absent_days = frappe.utils.date_diff(salary_structure_assignment.from_date, self.from_date)
 					per_day = salary_structure_assignment.base / second_salary.custom_payment_day
-					second_salary.custom_payment_day =  second_salary.custom_payment_day - (absent_days)
+					second_salary.custom_payment_day =  second_salary.custom_payment_day - (absent_days_second)
 					second_salary.custom_base = per_day * second_salary.custom_payment_day
-					second_salary.custom_absent_deduction = per_day * (absent_days)
+					second_salary.custom_absent_deduction = per_day * (absent_days_second)
 					second_salary.custom_monthly_salary = salary_structure_assignment.base
-					second_salary.payment_days =  second_salary.payment_days - (absent_days)
+					second_salary.payment_days =  second_salary.payment_days - (absent_days_second)
 					second_salary.calculate_net_pay() 
 					
 					
