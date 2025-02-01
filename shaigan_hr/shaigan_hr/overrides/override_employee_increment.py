@@ -76,8 +76,8 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			date_diff = absent_days_first + absent_days_second
 			from_date = str(self.increment_date)
 			day_of_from_date = datetime.strptime(from_date, "%Y-%m-%d").day
-			frappe.msgprint(str(absent_days_first))
-			frappe.msgprint(str(absent_days_second))
+			# frappe.msgprint(str(absent_days_first))
+			# frappe.msgprint(str(absent_days_second))
 			if day_of_from_date in [26, 27, 28, 29, 30, 31]:
 				# frappe.throw(f"sa {salary_structure_assignment.from_date}")
 				# frappe.msgprint("if")
@@ -94,8 +94,8 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 					absent_days_second = absent_days_second - (date_diff - 30)
 				elif date_diff < 30:
 					absent_days_second = absent_days_second + (30 - date_diff)
-			frappe.msgprint(str(absent_days_first))
-			frappe.msgprint(str(absent_days_second))
+			# frappe.msgprint(str(absent_days_first))
+			# frappe.msgprint(str(absent_days_second))
 
 			print(absent_days_first, "absent_days \n\n\n\n")
 		# 	if  allow_manual_att == "Yes":
