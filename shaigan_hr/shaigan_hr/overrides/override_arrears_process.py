@@ -70,6 +70,8 @@ class OverrideArrearsProcess(ArrearsProcess):
 				for emp in filter_employee:
 					if frappe.db.get_value("Employee", emp.employee, "status") == "Active" and emp.employee in employees_done:
 						continue
+					if frappe.db.exists("Employee Arrears", {'employee': emp.employee, 'from_date':self.from_date, 'to_date':self.to_date}):
+						continue
 
 					employees_done.append(emp.employee)
 					
@@ -214,7 +216,7 @@ class OverrideArrearsProcess(ArrearsProcess):
 						new_row = self.append("arrear_process_detail", {})
 						new_row.employee = emp.employee
 						new_row.to = self.to_date
-						new_row.base_salary = salary_structure_assignment.base
+						# new_row.base_salary = salary_structure_assignment.base
 						new_row.amount = arrears_basic
 
 

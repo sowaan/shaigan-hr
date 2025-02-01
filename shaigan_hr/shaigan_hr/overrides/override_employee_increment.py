@@ -1,10 +1,11 @@
 import frappe
+from datetime import datetime
 from sowaan_hr.sowaan_hr.doctype.employee_increment.employee_increment import EmployeeIncrement
 from frappe.utils import now, add_days
 
 
 class OverrideEmployeeIncrement(EmployeeIncrement):
-	def on_submit(self):
+	def before_save(self):
 		salary_sturcture = self.get_structure_asignment()
 		tax_slab = frappe.get_last_doc("Income Tax Slab", filters={
 			"company": self.company,
@@ -70,8 +71,33 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			})
 			salary_slip.validate()
 			print(salary_slip.custom_base, "base \n\n\n\n")
-			absent_days = frappe.utils.date_diff(end_date, end_date_)
-			print(absent_days, "absent_days \n\n\n\n")
+			absent_days_first = frappe.utils.date_diff(end_date, end_date_)
+			absent_days_second = frappe.utils.date_diff(end_date_, start_date)
+			date_diff = absent_days_first + absent_days_second
+			from_date = str(self.increment_date)
+			day_of_from_date = datetime.strptime(from_date, "%Y-%m-%d").day
+			frappe.msgprint(str(absent_days_first))
+			frappe.msgprint(str(absent_days_second))
+			if day_of_from_date in [26, 27, 28, 29, 30, 31]:
+				# frappe.throw(f"sa {salary_structure_assignment.from_date}")
+				# frappe.msgprint("if")
+				# frappe.msgprint(from_date)
+				
+				if date_diff > 30:
+					absent_days_first = absent_days_first - (date_diff - 30)
+				elif date_diff < 30:
+					absent_days_first = absent_days_first + (30 - date_diff)
+			else:
+				# frappe.msgprint("else")
+				# frappe.msgprint(from_date)
+				if date_diff > 30:
+					absent_days_second = absent_days_second - (date_diff - 30)
+				elif date_diff < 30:
+					absent_days_second = absent_days_second + (30 - date_diff)
+			frappe.msgprint(str(absent_days_first))
+			frappe.msgprint(str(absent_days_second))
+
+			print(absent_days_first, "absent_days \n\n\n\n")
 		# 	if  allow_manual_att == "Yes":
 			s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
 				"employee": self.employee,
@@ -79,12 +105,12 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 				"docstatus": 1
 			}, order_by="from_date desc")
 			per_day = s_s_assignment.base / salary_slip.custom_payment_day
-			salary_slip.custom_payment_day =  salary_slip.custom_payment_day - absent_days
+			salary_slip.custom_payment_day =  salary_slip.custom_payment_day - absent_days_first
 			salary_slip.custom_base = per_day * salary_slip.custom_payment_day
-			salary_slip.custom_absent_deduction = per_day * absent_days
+			salary_slip.custom_absent_deduction = per_day * absent_days_first
 			salary_slip.custom_monthly_salary = s_s_assignment.base
 			# print(per_day, salary_slip.custom_payment_day, absent_days, s_s_assignment.base, "old Salary per_day \n\n\n\n")
-			salary_slip.payment_days =  salary_slip.payment_days - absent_days
+			salary_slip.payment_days =  salary_slip.payment_days - absent_days_first
 			salary_slip.calculate_net_pay()
 			# print("start Date", start_date, "end date", end_date_, "salary_slip.earnings \n\n\n\n", salary_slip.custom_payment_day, salary_slip.payment_days, absent_days, salary_slip.custom_base, "\n\n")
 
@@ -102,7 +128,8 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			salary_slip1.validate()
 			print(salary_slip1.custom_base, "base \n\n\n\n")
 
-			absent_days = frappe.utils.date_diff(end_date_, start_date) 
+			# absent_days = frappe.utils.date_diff(end_date_, start_date) 
+			# frappe.throw(str(absent_days_second))
 			
 		# 	if  allow_manual_att == "Yes":
 			s_s_assignment = frappe.get_last_doc("Salary Structure Assignment", filters={
@@ -112,12 +139,12 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 			}, order_by="from_date desc")
 
 			per_day = s_s_assignment.base / salary_slip1.custom_payment_day
-			salary_slip1.custom_payment_day =  salary_slip1.custom_payment_day - absent_days
+			salary_slip1.custom_payment_day =  salary_slip1.custom_payment_day - absent_days_second
 			salary_slip1.custom_base = per_day * salary_slip1.custom_payment_day
-			salary_slip1.custom_absent_deduction = per_day * absent_days
+			salary_slip1.custom_absent_deduction = per_day * absent_days_second
 			salary_slip1.custom_monthly_salary = s_s_assignment.base
 			# print(per_day, salary_slip1.custom_payment_day, absent_days, s_s_assignment.base, "new Salary per_day \n\n\n\n")
-			salary_slip1.payment_days =  salary_slip1.payment_days - absent_days
+			salary_slip1.payment_days =  salary_slip1.payment_days - absent_days_second
 			salary_slip1.calculate_net_pay()   
 		# 	# print(salary_slip1.as_dict().earnings, "start Date", self.increment_date, "end date", end_date, "salary_slip.earnings \n\n\n\n", salary_slip1.custom_payment_day,salary_slip1.payment_days, absent_days, salary_slip1.custom_base, "\n\n") 
 			from_date = add_days(end_date, 1)
@@ -132,7 +159,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 					"from_date": from_date,
 					"to_date": end_date['end_date'],
 					"earning_component": self.arrears_salary_component,
-					"docstatus": 1
+					# "docstatus": 1
 				})  
 			
 			arr_process_setting = frappe.get_doc("Arrears Process Setting")
@@ -214,7 +241,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 				"from_date": from_date,
 				"to_date": end_date["end_date"],
 				"company": self.company,
-				"docstatus": 1,
+				# "docstatus": 1,
 				"employee_increment": self.name
 			})
 
