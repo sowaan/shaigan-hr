@@ -230,7 +230,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 
 			emp_arrears.total_earning = total_earning
 			emp_arrears.total_deduction = total_deduction
-			emp_arrears.insert(ignore_permissions=True)
+			
 			
 			
 			
@@ -271,6 +271,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 					})
 
 			arrears.insert(ignore_permissions=True)
+			emp_arrears.insert(ignore_permissions=True)
 			frappe.db.set_value("Employee Arrears", emp_arrears.name, "arrears_process", arrears.name)
 
 	@frappe.whitelist()
