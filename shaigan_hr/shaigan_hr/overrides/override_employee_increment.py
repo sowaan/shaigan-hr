@@ -5,7 +5,7 @@ from frappe.utils import now, add_days
 
 
 class OverrideEmployeeIncrement(EmployeeIncrement):
-	def before_save(self):
+	def on_submit(self):
 		salary_sturcture = self.get_structure_asignment()
 		tax_slab = frappe.get_last_doc("Income Tax Slab", filters={
 			"company": self.company,
@@ -159,7 +159,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 					"from_date": from_date,
 					"to_date": end_date['end_date'],
 					"earning_component": self.arrears_salary_component,
-					# "docstatus": 1
+					"docstatus": 1
 				})  
 			
 			arr_process_setting = frappe.get_doc("Arrears Process Setting")
@@ -241,7 +241,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 				"from_date": from_date,
 				"to_date": end_date["end_date"],
 				"company": self.company,
-				# "docstatus": 1,
+				"docstatus": 1,
 				"employee_increment": self.name
 			})
 
