@@ -8,6 +8,8 @@ from shaigan_hr.shaigan_hr.overrides.quarter_leave_application import get_leave_
 
 
 def create_system_generated_quarter_leaves(att_doc, leave_type, sch_doc):
+
+	
 	la_doc = frappe.get_doc({
 		"doctype": "Leave Application",
 		"employee": att_doc.employee,
@@ -21,8 +23,12 @@ def create_system_generated_quarter_leaves(att_doc, leave_type, sch_doc):
 		"status": "Approved",
 		"docstatus": 0,
 	})
+
 	la_doc.insert()
 	la_doc.submit()
+	if sch_doc.workflow_exist == 1 :
+		frappe.db.set_value("Leave Application" , la_doc.name , "workflow_state" , sch_doc.workflow_state)
+
 
 
 def create_system_generated_full_leaves(att_doc, leave_type, sch_doc):
@@ -41,6 +47,8 @@ def create_system_generated_full_leaves(att_doc, leave_type, sch_doc):
 	)
 
 	if not leave_exists :
+
+			
 		la_doc = frappe.get_doc({
 			"doctype": "Leave Application",
 			"employee": att_doc.employee,
@@ -53,8 +61,11 @@ def create_system_generated_full_leaves(att_doc, leave_type, sch_doc):
 			"status": "Approved",
 			"docstatus": 0,
 		})
+		
 		la_doc.insert()
 		la_doc.submit()
+		if sch_doc.workflow_exist == 1 :
+			frappe.db.set_value("Leave Application" , la_doc.name , "workflow_state" , sch_doc.workflow_state)
 
 
 def create_system_generated_half_leaves(att_doc, leave_type, sch_doc):
@@ -74,6 +85,8 @@ def create_system_generated_half_leaves(att_doc, leave_type, sch_doc):
 	)
 
 	if not leave_exists :
+
+		
 		la_doc = frappe.get_doc({
 			"doctype": "Leave Application",
 			"employee": att_doc.employee,
@@ -87,8 +100,13 @@ def create_system_generated_half_leaves(att_doc, leave_type, sch_doc):
 			"status": "Approved",
 			"docstatus": 0,
 		})
+		
 		la_doc.insert()
 		la_doc.submit()
+		if sch_doc.workflow_exist == 1 :
+			frappe.db.set_value("Leave Application" , la_doc.name , "workflow_state" , sch_doc.workflow_state)
+		
+
 
 
 
@@ -152,7 +170,7 @@ def check_and_create_quarter_leaves(doc):
 
 def check_and_create_full_and_half_leaves(doc):
 	emp_list = frappe.get_list("Employee", filters={'status': 'Active'})
-	frappe.msgprint(str(emp_list))
+	# frappe.msgprint(str(emp_list))
 
 	if emp_list:
 
