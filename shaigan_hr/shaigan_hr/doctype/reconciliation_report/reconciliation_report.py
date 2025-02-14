@@ -509,12 +509,12 @@ class ReconciliationReport(Document):
 				# 	if  diff1 > 0 and diff1 < 1:
 				# 		diff = 0
 				# Append non-zero differences to the table
-				if diff != 0:
+				if diff1 != 0:
 					doc.append("less_paid_last_month", {
 						"employee": employee_id,
 						"employee_name": current_data['employee_name'],
 						"designation": current_data['designation'],
-						"amount": round(diff)
+						"amount": round(diff1)
 					})
 
 
