@@ -365,6 +365,8 @@ class ReconciliationReport(Document):
 			#   {"start_date": start_date, "end_date": end_date}
 			, as_dict=True)
 		]
+		# if not current_employees:
+		# 	current_employees = ("",)
 		params["current_employees"] = current_employees
 					
 		
@@ -499,14 +501,15 @@ class ReconciliationReport(Document):
 			current_data = current_map.get(employee_id)
 			if current_data:
 				diff = current_data['total_amount'] - prev_data['total_amount']
-				diff1 = diff
-				if diff != 0 :
-					if diff1 < 0 :
-						diff1 = diff1 * (-1)
-					# If the difference is very small, set it to 0
-					if  diff1 > 0 and diff1 < 1:
-						diff = 0
-					# Append non-zero differences to the table
+				diff1 = abs(diff)
+				# if diff != 0 :
+				# 	if diff1 < 0 :
+				# 		diff1 = diff1 * (-1)
+				# 	# If the difference is very small, set it to 0
+				# 	if  diff1 > 0 and diff1 < 1:
+				# 		diff = 0
+				# Append non-zero differences to the table
+				if diff != 0:
 					doc.append("less_paid_last_month", {
 						"employee": employee_id,
 						"employee_name": current_data['employee_name'],
@@ -637,7 +640,9 @@ class ReconciliationReport(Document):
 
 
 		# Extract the basic_salary values (assuming a single result will be returned)
-		salary_paid_current_month = total_gross_current_month[0]['basic_salary'] - total_imbers_current_month[0]['imprest_reimbursement']  if total_gross_current_month else 0
+		salary_paid_current_month = (total_gross_current_month[0]['basic_salary'] or 0) - (total_imbers_current_month[0]['imprest_reimbursement'] or 0) if total_gross_current_month else 0
+
+		# salary_paid_current_month = total_gross_current_month[0]['basic_salary'] - total_imbers_current_month[0]['imprest_reimbursement']  if total_gross_current_month else 0
 		salary_paid_last_month = total_gross_last_month[0]['basic_salary'] - total_imbers_last_month[0]['imprest_reimbursement'] if total_gross_last_month else 0
 		# frappe.msgprint(str(total_paid_current_month[0]['imprest_reimbursement']) + str(total_paid_current_month[0]['basic_salary']))
 		# frappe.msgprint(str(total_paid_last_month[0]['imprest_reimbursement']) + str(total_paid_last_month[0]['basic_salary']))
