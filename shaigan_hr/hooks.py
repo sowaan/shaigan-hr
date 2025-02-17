@@ -12,7 +12,8 @@ fixtures = [
       "doctype" : "Custom Field",
       "filters" : [
         [  
-          "module" , "=" , "Shaigan HR"
+          "module" , "=" , "Shaigan HR" ,
+          "fieldname" , "in" , ("custom_quarter_leave_without_pay","custom_working_days","custom_system_generated_leave_days","custom_payment_day","custom_base")
         ]  
       ]
 	  },

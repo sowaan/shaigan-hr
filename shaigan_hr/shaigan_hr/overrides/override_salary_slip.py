@@ -78,18 +78,37 @@ class OverrideSalarySlip(SalarySlip):
                             },fields=['total_leave_days'])
 
         total_sys_gen_leaves = 0
+        quarter_total_sys_gen_leaves = 0
 
         if sys_gen_la_list :
             for x in sys_gen_la_list :
                 total_sys_gen_leaves = total_sys_gen_leaves + x.total_leave_days
-            
+
         self.custom_system_generated_leave_days = total_sys_gen_leaves
+
+        quarter_sys_gen_la_list = frappe.get_list('Leave Application',
+                                        filters={
+                                            'employee' : self.employee ,
+                                            # 'custom_system_generated' : 1 ,
+                                            'leave_type' : 'Leave Without Pay' ,
+                                            'from_date' : ['between',[self.start_date , self.end_date]] ,
+                                            'status' : 'Approved' ,
+                                            'custom_quarter_day' : 1 ,
+                                            'docstatus' : 1 ,
+                                    },fields=['total_leave_days'])
+
+
+        if quarter_sys_gen_la_list :
+            for y in quarter_sys_gen_la_list :
+                quarter_total_sys_gen_leaves = quarter_total_sys_gen_leaves + y.total_leave_days
+            
+        self.custom_quarter_leave_without_pay = quarter_total_sys_gen_leaves
 
         ###############################################################################################################
         emp_doc = frappe.get_doc('Employee',self.employee)
 
         if emp_doc.custom_allow_manual_attendance != 'Yes' :
-            self.custom_payment_day = 30 - (self.total_working_days - self.payment_days) - self.custom_system_generated_leave_days
+            self.custom_payment_day = float(30 - (self.total_working_days - self.payment_days)) - float(self.custom_system_generated_leave_days + self.custom_quarter_leave_without_pay)
         else :
             self.custom_payment_day = 30 - joining_date_days_diff
 
