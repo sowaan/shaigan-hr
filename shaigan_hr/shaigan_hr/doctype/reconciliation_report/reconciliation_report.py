@@ -80,6 +80,7 @@ class ReconciliationReport(Document):
 				e.relieving_date,
 				e.designation,
 				ss.gross_pay,
+				ss.custom_payment_day,
 				SUM(CASE WHEN se.salary_component = 'Pre Month Arrear' THEN se.amount ELSE 0 END) AS pre_month_arrear,
 				SUM(CASE WHEN se.salary_component = 'Imprest Reimbursement' THEN se.amount ELSE 0 END) AS imprest_reimbursement,
 				SUM(CASE WHEN se.salary_component = 'Arrears' THEN se.amount ELSE 0 END) AS arrears,
@@ -117,6 +118,7 @@ class ReconciliationReport(Document):
 			arrears = employee["arrears"] if employee["arrears"] else 0
 			increment_arrears = employee["increment_arrears"] if employee["increment_arrears"] else 0
 			automated_arrears = employee["automated_arrears"] if employee["automated_arrears"] else 0
+			days_diff = employee["custom_payment_day"] if employee["custom_payment_day"] else 0
 
 			# Calculate the adjusted base salary
 			adjusted_base_salary = (
@@ -128,10 +130,10 @@ class ReconciliationReport(Document):
 				- automated_arrears
 			)
 
-			# Calculate paid salary based on joining days
-			days_diff = frappe.utils.date_diff(end_date, employee["date_of_joining"]) + 1
-			if days_diff > 30:
-				days_diff = 30
+			# # Calculate paid salary based on joining days
+			# days_diff = frappe.utils.date_diff(end_date, employee["date_of_joining"]) + 1
+			# if days_diff > 30:
+			# 	days_diff = 30
 
 			# Append data to the table
 			doc.append("table_qase", {
@@ -156,7 +158,7 @@ class ReconciliationReport(Document):
 				e.name AS employee_id,
 				e.employee_name,
 				e.date_of_joining,
-				e.relieving_date,
+				e.resignation_letter_date,
 				e.designation,
 				ss_prev.gross_pay,
 				SUM(CASE WHEN se.salary_component = 'Imprest Reimbursement' THEN se.amount ELSE 0 END) AS imprest_reimbursement,
@@ -167,7 +169,7 @@ class ReconciliationReport(Document):
 				AND ss_prev.start_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s  -- Previous month salary slip
 			LEFT JOIN `tabSalary Detail` se ON se.parent = ss_prev.name AND se.parentfield = 'earnings'
 			WHERE
-				e.relieving_date BETWEEN %(start_date)s AND %(end_date)s
+				e.resignation_letter_date BETWEEN %(start_date)s AND %(end_date)s
 				{filter_condition}
 			GROUP BY e.name, ss_prev.name
 		""",params
@@ -245,18 +247,19 @@ class ReconciliationReport(Document):
 
 
 
+		# # For Increment / Incetives Table############################################
+		
+		doc.table_robb = []
 
-		# For Increment / Incetives Table############################################
-		doc.table_robb = []
-		doc.table_robb = []
 		combined_query = f"""
+		WITH arrears_data AS (
 			SELECT 
 				e.name AS employee_id, 
 				e.employee_name, 
 				e.designation,
 				SUM(ead.amount) AS increment_amount,
 				CASE 
-					WHEN ei.increment_date IS NOT NULL THEN DATEDIFF(%(end_date)s, ei.increment_date)+1
+					WHEN ei.increment_date IS NOT NULL THEN DATEDIFF(%(end_date)s, ei.increment_date) + 1
 					ELSE 30 
 				END AS days
 			FROM
@@ -267,7 +270,6 @@ class ReconciliationReport(Document):
 				`tabEmployee Earning Detail` ead ON ead.parent = ea.name
 			LEFT JOIN
 				`tabEmployee Increment` ei ON ei.employee = e.name
-				AND ei.arrears_salary_component NOT LIKE 'Pre Increment Arrears'  -- Exclude Pre Increment Arrears
 				AND ei.increment_date BETWEEN %(start_date)s AND %(end_date)s
 			WHERE
 				ea.from_date = %(start_date)s
@@ -276,48 +278,51 @@ class ReconciliationReport(Document):
 				AND ea.earning_component NOT LIKE 'Pre Increment Arrears'
 				AND ea.docstatus = 1
 				{filter_condition}
-			GROUP BY e.name
+			GROUP BY e.name, e.employee_name, e.designation
+		),
 
-			
-			# UNION ALL
-			
-			# SELECT 
-			# 	e.name AS employee_id, 
-			# 	e.employee_name, 
-			# 	e.designation,
-			# 	ei.increment_amount AS increment_amount,
-			# 	30 AS days
-			# FROM
-			# 	`tabEmployee` e
-			# JOIN
-			# 	`tabEmployee Increment` ei ON ei.employee = e.name
-			# WHERE
-			# 	ei.increment_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
-			# 	AND ei.arrears_salary_component = 'Pre Increment Arrears'
-			# 	AND ei.docstatus = 1
-				
+		increment_data AS (
+			SELECT 
+				e.name AS employee_id, 
+				e.employee_name, 
+				e.designation,
+				ei.increment_amount AS increment_amount,
+				30 AS days
+			FROM
+				`tabEmployee` e
+			JOIN
+				`tabEmployee Increment` ei ON ei.employee = e.name
+			WHERE
+				ei.increment_date BETWEEN %(start_date)s AND %(end_date)s
+				AND ei.docstatus = 1
+				AND NOT EXISTS (
+					SELECT 1 FROM `tabEmployee Arrears` ea 
+					WHERE ea.employee = ei.employee 
+					AND ea.from_date = %(start_date)s 
+					AND ea.to_date = %(end_date)s
+				)
+				{filter_condition}
+		)
+
+		SELECT * FROM arrears_data
+		UNION ALL
+		SELECT * FROM increment_data;
 		"""
 
 		# Execute the query
-		combined_results = frappe.db.sql(combined_query,params
-		# 						    {
-		# 	"start_date": start_date,
-		# 	"end_date": end_date,
-		# 	"prev_start_date": prev_start_date,
-		# 	"prev_end_date": prev_end_date,
-		# 	"employee_id": employee_id
-		# }
-		, as_dict=True)
+		combined_results = frappe.db.sql(combined_query, params, as_dict=True)
 
-		# Append each result to table_robb
+		# Append each result to table_robb (No Change in Logic)
 		for employee in combined_results:
 			doc.append("table_robb", {
 				"employee_id": employee["employee_id"],
 				"employee_name": employee["employee_name"],
 				"designation": employee["designation"],
 				"increment_amount": round(employee["increment_amount"]),
-				"increment_days" : employee["days"]
+				"increment_days": employee["days"]
 			})
+
+
 		
 
 
@@ -447,6 +452,14 @@ class ReconciliationReport(Document):
 
 		#less paid ######################
 
+		increment_ids = [f"'{emp['employee_id']}'" for emp in combined_results]
+
+		# Convert the list of employee_ids to a comma-separated string
+		increment_ids_str = ', '.join(increment_ids)
+
+
+
+
 		current_month_salaries = frappe.db.sql(f"""
 			SELECT 
 				ss.employee AS employee_id,
@@ -461,6 +474,7 @@ class ReconciliationReport(Document):
 			WHERE 
 				ss.start_date BETWEEN %(start_date)s AND %(end_date)s
 				{filter_condition_salaryslip}
+				AND ss.employee NOT IN ({increment_ids_str})
 				# AND sd.salary_component IN ('House Allowance', 'Basic', 'Medical', 'Utility Allowance')
 				
 			GROUP BY 
@@ -484,6 +498,7 @@ class ReconciliationReport(Document):
 				ss.end_date BETWEEN %(prev_start_date)s AND %(prev_end_date)s
 				AND ss.docstatus IN (0, 1)
 				{filter_condition_salaryslip}
+				AND ss.employee NOT IN ({increment_ids_str})
 			GROUP BY 
 				ss.employee
 		""",
@@ -497,25 +512,32 @@ class ReconciliationReport(Document):
 		# Loop through previous month's data, calculate the difference and append to `less_paid_last_month` table
 		for employee_id, prev_data in previous_map.items():
 			diff = 0
-			diff1 = 0
+			# diff1 = 0
 			current_data = current_map.get(employee_id)
 			if current_data:
-				diff = current_data['total_amount'] - prev_data['total_amount']
-				diff1 = abs(diff)
-				# if diff != 0 :
-				# 	if diff1 < 0 :
-				# 		diff1 = diff1 * (-1)
-				# 	# If the difference is very small, set it to 0
-				# 	if  diff1 > 0 and diff1 < 1:
-				# 		diff = 0
-				# Append non-zero differences to the table
-				if round(diff1) != 0:
+				diff = prev_data['total_amount'] - current_data['total_amount']
+				if diff < 0: 
 					doc.append("less_paid_last_month", {
 						"employee": employee_id,
 						"employee_name": current_data['employee_name'],
 						"designation": current_data['designation'],
-						"amount": round(diff1)
+						"amount": abs(diff)  # Convert negative difference to positive for display
 					})
+				# diff1 = abs(diff)
+				# # if diff != 0 :
+				# # 	if diff1 < 0 :
+				# # 		diff1 = diff1 * (-1)
+				# # 	# If the difference is very small, set it to 0
+				# # 	if  diff1 > 0 and diff1 < 1:
+				# # 		diff = 0
+				# # Append non-zero differences to the table
+				# if round(diff1) != 0:
+				# 	doc.append("less_paid_last_month", {
+				# 		"employee": employee_id,
+				# 		"employee_name": current_data['employee_name'],
+				# 		"designation": current_data['designation'],
+				# 		"amount": round(diff1)
+				# 	})
 
 
 
@@ -572,7 +594,7 @@ class ReconciliationReport(Document):
 
 
 
-		#total Salary
+		#total Salaryfilter
 		total_gross_current_month = frappe.db.sql(f"""
 			SELECT 
 				SUM(ss.gross_pay) AS basic_salary
@@ -641,20 +663,136 @@ class ReconciliationReport(Document):
 
 		# Extract the basic_salary values (assuming a single result will be returned)
 		salary_paid_current_month = (total_gross_current_month[0]['basic_salary'] or 0) - (total_imbers_current_month[0]['imprest_reimbursement'] or 0) if total_gross_current_month else 0
-
-		# salary_paid_current_month = total_gross_current_month[0]['basic_salary'] - total_imbers_current_month[0]['imprest_reimbursement']  if total_gross_current_month else 0
-		salary_paid_last_month = total_gross_last_month[0]['basic_salary'] - total_imbers_last_month[0]['imprest_reimbursement'] if total_gross_last_month else 0
-		# frappe.msgprint(str(total_paid_current_month[0]['imprest_reimbursement']) + str(total_paid_current_month[0]['basic_salary']))
-		# frappe.msgprint(str(total_paid_last_month[0]['imprest_reimbursement']) + str(total_paid_last_month[0]['basic_salary']))
-		# frappe.msgprint(str(total_imbers_current_month[0]['imprest_reimbursement']))
-		# frappe.msgprint(str(total_imbers_last_month[0]['imprest_reimbursement']))
+		salary_paid_last_month = (total_gross_last_month[0]['basic_salary'] or 0) - (total_imbers_current_month[0]['imprest_reimbursement'] or 0) if total_gross_last_month else 0
 
 		# Assign the values to the respective fields in the document
 		doc.salary_paid_current_month = salary_paid_current_month
 		doc.salary_paid_last_month = salary_paid_last_month
-
+		# frappe.msgprint(str(doc.salary_paid_current_month))
+		# frappe.msgprint(str(doc.salary_paid_last_month))
+		
 		# Calculate the total difference (sum of current and previous month's salary)
-		doc.total_difference = abs(salary_paid_current_month - salary_paid_last_month)
+		
+		frappe.msgprint(str(doc.total_difference))	
+
+
+		
+
+
+
+
+		# Extract employee_ids from joiners_employees
+		joiners_employee_ids = [f"'{emp['employee_id']}'" for emp in joiners_employees]
+
+		# Convert the list of employee_ids to a comma-separated string
+		joiners_employee_ids_str = ', '.join(joiners_employee_ids)
+
+		# For Absent Deduction Current Month Table############################################
+		doc.absent_deduction_current_month = []
+		unpaid_leaves_query = f"""
+			SELECT 
+				ss.employee AS employee_id,
+				e.employee_name,
+				e.designation,
+				(ss.absent_days + ss.leave_without_pay + custom_quarter_leave_without_pay + custom_system_generated_leave_days) AS total_unpaid_leaves,
+				# ssa.base AS base_salary  # Assuming 'base' is the field name for base salary in Salary Structure Assignment
+				ss.custom_monthly_salary AS base_salary
+
+			FROM 
+				`tabSalary Slip` ss
+			JOIN 
+				`tabEmployee` e ON ss.employee = e.name
+			# LEFT JOIN 
+			# 	`tabSalary Structure Assignment` ssa 
+			# 	ON ss.employee = ssa.employee
+			# 	AND ssa.from_date <= %(end_date)s  # Ensure from_date is on or before the end_date
+			WHERE 
+				ss.start_date = %(start_date)s
+				AND ss.end_date = %(end_date)s
+				AND e.custom_allow_manual_attendance = 'No'
+				AND ss.employee NOT IN ({joiners_employee_ids_str})
+				{filter_condition_salaryslip}
+			GROUP BY
+				ss.employee
+			# ORDER BY 
+			# 	ssa.from_date DESC  # Order by from_date to get the latest assignment
+		"""
+
+
+
+		unpaid_leaves_result = frappe.db.sql(unpaid_leaves_query, params, as_dict=True)
+
+		# Process or print results
+		for employee in unpaid_leaves_result:
+			if employee["total_unpaid_leaves"] > 0:
+
+				doc.append("absent_deduction_current_month", {
+					"employee": employee["employee_id"],
+					"designation": employee["designation"],
+					"absent_days": employee["total_unpaid_leaves"],
+					"absent_amount": ((employee["base_salary"] / 30) * employee["total_unpaid_leaves"] ),  # Add base salary from the latest assignment
+				})
+
+
+
+		# For Absent Deduction Last Month Table############################################
+		doc.absent_deduction_last_month = []
+		last_unpaid_leaves_query = f"""
+			SELECT 
+				ss.employee AS employee_id,
+				e.employee_name,
+				e.designation,
+				(ss.absent_days + ss.leave_without_pay + custom_quarter_leave_without_pay + custom_system_generated_leave_days) AS total_unpaid_leaves,
+				# ssa.base AS base_salary  # Assuming 'base' is the field name for base salary in Salary Structure Assignment
+				ss.custom_monthly_salary AS base_salary
+
+			FROM 
+				`tabSalary Slip` ss
+			JOIN 
+				`tabEmployee` e ON ss.employee = e.name
+			# LEFT JOIN 
+			# 	`tabSalary Structure Assignment` ssa 
+			# 	ON ss.employee = ssa.employee
+			# 	AND ssa.from_date <= %(prev_end_date)s  # Ensure from_date is on or before the end_date
+			WHERE 
+				ss.start_date = %(prev_start_date)s
+				AND ss.end_date = %(prev_end_date)s
+				AND e.custom_allow_manual_attendance = 'No'
+				{filter_condition_salaryslip}
+			# ORDER BY 
+			# 	ssa.from_date DESC  # Order by from_date to get the latest assignment
+		"""
+
+
+
+		last_unpaid_leaves_result = frappe.db.sql(last_unpaid_leaves_query, params, as_dict=True)
+
+		# Process or print results
+		for employee in last_unpaid_leaves_result:
+			if employee["total_unpaid_leaves"] > 0:
+
+				doc.append("absent_deduction_last_month", {
+					"employee": employee["employee_id"],
+					"designation": employee["designation"],
+					"absent_days": employee["total_unpaid_leaves"],
+					"absent_amount": ((employee["base_salary"] / 30) * employee["total_unpaid_leaves"] ),  # Add base salary from the latest assignment
+				})
+
+		xamount = 0
+		for i in doc.absent_deduction_current_month:
+			xamount += i.absent_amount or 0
+		doc.salary_paid_current_month = doc.salary_paid_current_month + xamount
+		doc.total_difference = abs(doc.salary_paid_current_month - doc.salary_paid_last_month)
+
+
+
+		current_month_map = {row.employee: row.absent_amount for row in doc.absent_deduction_current_month}
+
+		# Iterate over doc.absent_deduction_last_month and update amount if employee exists in both tables
+		for row in doc.less_paid_last_month:
+			if row.employee in current_month_map:
+				row.amount += current_month_map[row.employee]
+
 
 
 		total1 = 0
@@ -671,6 +809,8 @@ class ReconciliationReport(Document):
 			total1 += i.difference or 0
 		for i in doc.less_paid_last_month:
 			total1 += i.amount or 0
+		# for i in doc.absent_deduction_last_month:
+		# 	total1 += i.absent_amount or 0
 		doc.total1 = total1
 
 		# Summing total2
@@ -680,8 +820,15 @@ class ReconciliationReport(Document):
 			total2 += i.amount or 0
 		for i in doc.allowances_cancelled:
 			total2 += i.difference or 0
+		# for i in doc.absent_deduction_current_month:
+		# 	total2 += i.absent_amount or 0
+
 		doc.total2 = total2
 
 		# Calculate the difference
-		doc.difference = doc.total1 - doc.total2
+		doc.difference = abs(doc.total1 - doc.total2)
+
+
+
+
 		

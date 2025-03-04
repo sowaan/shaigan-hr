@@ -37,8 +37,9 @@
   },
   {
    "fieldname": "paid_days",
-   "fieldtype": "Int",
-   "label": "Payable Days"
+   "fieldtype": "Float",
+   "label": "Payable Days",
+   "precision": "2"
   },
   {
    "fieldname": "paid_salary",
@@ -49,7 +50,7 @@
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2024-12-06 17:19:13.767712",
+ "modified": "2025-02-18 14:34:53.226310",
  "modified_by": "Administrator",
  "module": "Shaigan HR",
  "name": "Reconciliation Report Table",

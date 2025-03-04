@@ -33,6 +33,10 @@
   "less_paid_last_month",
   "excess_paid_last_month_section",
   "excess_paid_month",
+  "absent_deduction_current_month_section",
+  "absent_deduction_current_month",
+  "absent_deduction_last_month_section",
+  "absent_deduction_last_month",
   "section_break_loek",
   "total1",
   "difference",
@@ -183,7 +187,8 @@
   {
    "fieldname": "salary_paid_last_month",
    "fieldtype": "Float",
-   "label": "Salary Paid Last Month"
+   "label": "Salary Paid Last Month",
+   "precision": "3"
   },
   {
    "fieldname": "salary_paid_current_month",
@@ -235,12 +240,38 @@
    "fieldtype": "Link",
    "label": "Department",
    "options": "Department"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "absent_deduction_current_month_section",
+   "fieldtype": "Section Break",
+   "label": "Absent Deduction Current Month"
+  },
+  {
+   "allow_bulk_edit": 1,
+   "fieldname": "absent_deduction_current_month",
+   "fieldtype": "Table",
+   "label": "Absent Deduction Current Month",
+   "options": "Absent Deduction Current Month"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "absent_deduction_last_month_section",
+   "fieldtype": "Section Break",
+   "label": "Absent Deduction Last Month"
+  },
+  {
+   "allow_bulk_edit": 1,
+   "fieldname": "absent_deduction_last_month",
+   "fieldtype": "Table",
+   "label": "Absent Deduction Last Month",
+   "options": "Absent Deduction Current Month"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-01-11 16:26:33.330485",
+ "modified": "2025-02-24 11:37:39.934517",
  "modified_by": "Administrator",
  "module": "Shaigan HR",
  "name": "Reconciliation Report",
