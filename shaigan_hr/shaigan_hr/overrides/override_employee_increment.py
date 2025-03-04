@@ -27,6 +27,7 @@ class OverrideEmployeeIncrement(EmployeeIncrement):
 		new_salary_structure.base = self.revised_salary
 		new_salary_structure.employee_increment = self.name
 		new_salary_structure.from_date = self.increment_date
+		new_salary_structure.docstatus = 1
 		new_salary_structure.insert(ignore_permissions=True)
 
 		arrears_setting = frappe.get_doc("Arrears Process Setting")
