@@ -11,17 +11,15 @@ fixtures = [
     {
       "doctype" : "Custom Field",
       "filters" : [
-        [  
-          "module" , "=" , "Shaigan HR" ,
-          "fieldname" , "in" , ("custom_quarter_leave_without_pay","custom_working_days","custom_system_generated_leave_days","custom_payment_day","custom_base")
-        ]  
-      ]
+    ["module", "=", "Shaigan HR"]
+]
+
 	  },
     {
       "doctype" : "Print Format",
       "filters" : [
         [  
-          "name", "IN", ["Reconciliation Report Print", "Payorder Report"]
+          "name", "in", ["Reconciliation Report Print", "Payorder Report"]
         ]
       ]
     },
@@ -152,6 +150,7 @@ override_doctype_class = {
   "Employee Increment" : "shaigan_hr.shaigan_hr.overrides.override_employee_increment.OverrideEmployeeIncrement",
   "Arrears Process" : "shaigan_hr.shaigan_hr.overrides.override_arrears_process.OverrideArrearsProcess",
   "Compensatory Leave Request" : "shaigan_hr.shaigan_hr.overrides.compensatory_leave_request.OverrideCompensatoryLeaveRequest" ,
+  "Additional Salary" : "shaigan_hr.shaigan_hr.overrides.override_additional_salary.OverrideAdditionalSalary"
 }
 
 # Document Events
