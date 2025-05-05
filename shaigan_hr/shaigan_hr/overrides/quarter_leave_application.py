@@ -75,9 +75,11 @@ class QuarterLeaveApplication(LeaveApplication):
 
 
 	def validate(self):
+
 		validate_active_employee(self.employee)
 		set_employee_name(self)
 		self.validate_dates()
+		
 		self.validate_balance_leaves()
 		if self.custom_quarter_day != 1 :
 			self.validate_leave_overlap()
@@ -95,6 +97,7 @@ class QuarterLeaveApplication(LeaveApplication):
 		if self.custom_quarter_day == 1:
 			self.total_leave_days = 0.25
 			frappe.db.set_value("Leave Application",self.name,"total_leave_days",0.25)
+
 
 
 	def before_save(self) :
