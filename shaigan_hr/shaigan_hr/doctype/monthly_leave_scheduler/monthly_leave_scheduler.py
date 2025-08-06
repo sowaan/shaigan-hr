@@ -444,54 +444,6 @@ def check_adjacent_leaves(doc) :
             holiday_att_doc = frappe.get_doc('Attendance', row.name)
             holiday_att_doc.cancel()
                 
-				
-		
-				
-				
-					
-					
-					
-					
-					
-					
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
 
 class MonthlyLeaveScheduler(Document):
 
@@ -500,7 +452,6 @@ class MonthlyLeaveScheduler(Document):
 			frappe.throw("'To Date' must be greater than 'From Date'.")
 
 	def before_submit(self):
-		doc_name = self
 		enqueue(check_and_create_full_and_half_leaves , doc = self, queue = "long")
 		
 		
