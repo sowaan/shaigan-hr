@@ -135,7 +135,7 @@ def create_system_generated_half_leaves(att_doc, leave_type, sch_doc):
 
 
 def check_and_create_quarter_leaves(doc):
-	emp_list = frappe.get_list("Employee", filters={'status': 'Active'})
+	emp_list = frappe.get_list("Employee", filters={'status': 'Active'}, fields=["name", "employment_type"])
 
 	if emp_list:
 		for emp in emp_list:
@@ -187,6 +187,13 @@ def check_and_create_quarter_leaves(doc):
 									leave_type = "Sick Leave"
 								else:
 									leave_type = "Leave Without Pay"
+							
+							if emp.employment_type == 'Probation' and leave_type == "Casual Leave":
+								continue
+
+							if emp.employment_type == 'Probation' and leave_type == "Sick Leave":
+								if doc.from_date != doc.to_date:
+									continue
 
 							create_system_generated_quarter_leaves(att_doc, leave_type, doc)
 
@@ -261,6 +268,13 @@ def check_and_create_full_and_half_leaves(doc):
 							leave_type = "Sick Leave"
 						else:
 							leave_type = "Leave Without Pay"
+
+					if emp.employment_type == 'Probation' and leave_type == "Casual Leave":
+						continue
+
+					if emp.employment_type == 'Probation' and leave_type == "Sick Leave":
+						if doc.from_date != doc.to_date:
+							continue
 
 					create_system_generated_half_leaves(att_doc, leave_type, doc)
 
