@@ -138,6 +138,8 @@ class QuarterLeaveApplication(LeaveApplication):
 			if la_list :
 				frappe.throw("Your Quarter Leave Time is Overlapping")
 
+		holiday_leave_adjacent(self)
+
 
 
     # Sufyan Created this Function 
@@ -1541,3 +1543,158 @@ def get_leave_approver(employee):
 
 def on_doctype_update():
 	frappe.db.add_index("Leave Application", ["employee", "from_date", "to_date"])
+
+
+
+def holiday_leave_adjacent(doc):
+	if doc.custom_system_generated != 1 and doc.custom_quarter_day != 1 and doc.half_day != 1 and doc.workflow_state == 'Draft': 
+		day_before = frappe.utils.add_days(doc.from_date,-1)
+		day_after = frappe.utils.add_days(doc.to_date,1)
+		dayDifference = frappe.utils.date_diff(doc.to_date , doc.from_date) + 1
+		
+		
+		# frappe.msgprint(str(day_before) + " " + str(day_after))
+		
+		d_b = 0
+		d_a = 0
+		
+		
+		
+		emp_doc = frappe.get_doc("Employee", doc.employee);
+		att_list = frappe.get_list("Attendance", 
+						filters = {
+							"employee": doc.employee,
+							'shift': ["!=", ""],
+						},
+						fields = ['name', 'shift'],
+						order_by = "attendance_date DESC",
+					)
+					
+		
+		
+		
+		
+		if att_list : 
+			shift_doc = frappe.get_doc("Shift Type", att_list[0].shift)
+		else :
+			shift_doc = frappe.get_doc("Shift Type", emp_doc.default_shift)
+					
+			
+			
+			
+			
+			
+			
+		################ Give priority to holiday in the Employee doctype #################
+		
+		
+		holiday_in_emp = frappe.db.get_value('Employee', doc.employee, 'holiday_list')
+		if holiday_in_emp:
+			holiday_doc = frappe.get_doc("Holiday List", holiday_in_emp)
+		else:
+			holiday_doc = frappe.get_doc("Holiday List", shift_doc.holiday_list)
+		
+		
+		
+		
+		
+		
+		
+		public_holiday_dates = []
+		weekly_off_holiday_dates = []
+		
+		for row in holiday_doc.holidays :
+			if row.weekly_off != 1 :
+				public_holiday_dates.append(str(row.holiday_date))
+			else :
+				weekly_off_holiday_dates.append(str(row.holiday_date))
+				
+		# frappe.msgprint(str(doc.workflow_state))
+		
+		check_b_d = frappe.db.exists({"doctype" : "Leave Application", "employee" : doc.employee , "to_date" : day_before , "half_day" : ["!=" , 1] , "custom_quarter_day" : ["!=" , 1] , "docstatus" : ["!=" , 2] , "workflow_state" : ["NOT IN" , ['Rejected by First Approver','Rejected by Second Approver','Rejected by HR Head']] } )
+		check_a_d = frappe.db.exists({"doctype" : "Leave Application", "employee" : doc.employee , "from_date" : day_after , "half_day" : ["!=" , 1] , "custom_quarter_day" : ["!=" , 1] , "docstatus" : ["!=" , 2] , "workflow_state" : ["NOT IN" , ['Rejected by First Approver','Rejected by Second Approver','Rejected by HR Head']] } )
+		
+		
+		if not check_b_d :
+			# frappe.msgprint(str(public_holiday_dates))
+			while day_before in public_holiday_dates:
+				d_b = d_b + 1
+				day_before = frappe.utils.add_days(day_before, -1)
+				
+		
+		
+		if not check_a_d :    
+			while day_after in public_holiday_dates:
+				d_a = d_a + 1
+				day_after = frappe.utils.add_days(day_after, 1)
+		
+		
+			
+		doc.from_date = frappe.utils.add_days(day_before,1)
+		# frappe.msgprint(str(doc.from_date))
+		doc.to_date = frappe.utils.add_days(day_after,-1)
+		doc.total_leave_days = dayDifference + d_b + d_a
+		
+		
+		
+		
+		
+		
+		
+		###########################   FOR PUBLIC HOLIDAYS   ##########################
+		
+		
+		sig1 = 1
+		sig2 = 1
+		day_before = frappe.utils.add_days(doc.from_date,-1)
+		day_after = frappe.utils.add_days(doc.to_date,1)
+			
+		if d_b == 0 :
+			
+			while sig1 == 1 :
+				if day_before in weekly_off_holiday_dates :
+					day_before = frappe.utils.add_days(day_before, -1)
+					# frappe.msgprint("hello")
+				
+				else :
+					sig1 = 0
+					check_b_d = frappe.db.exists({"doctype" : "Leave Application", "employee" : doc.employee , "to_date" : day_before , "half_day" : ["!=" , 1] , "custom_quarter_day" : ["!=" , 1] , "docstatus" : ["!=" , 2] , "workflow_state" : ["NOT IN" , ['Rejected by First Approver','Rejected by Second Approver','Rejected by HR Head']] } )
+					if check_b_d :
+						doc.from_date = frappe.utils.add_days(day_before, 1)
+						
+		
+		if d_a == 0 :            
+					
+			while sig2 == 1 :
+			
+				if day_after in weekly_off_holiday_dates :
+					day_after = frappe.utils.add_days(day_after, 1)
+				
+				else :
+					sig2 = 0
+					check_a_d = frappe.db.exists({"doctype" : "Leave Application", "employee" : doc.employee , "from_date" : day_after , "half_day" : ["!=" , 1] , "custom_quarter_day" : ["!=" , 1] , "docstatus" : ["!=" , 2] , "workflow_state" : ["NOT IN" , ['Rejected by First Approver','Rejected by Second Approver','Rejected by HR Head']] } )
+					if check_a_d :
+						doc.to_date = frappe.utils.add_days(day_after, -1)
+				
+		
+		
+		doc.total_leave_days = frappe.utils.date_diff(doc.to_date , doc.from_date) + 1
+		
+		
+		holiday_att_list = frappe.db.get_list("Attendance",
+							
+								filters = {
+									'employee' : doc.employee ,
+									'docstatus' : 1 ,
+									'custom_holiday' : 1 ,
+									'attendance_date' : ['between', [doc.from_date , doc.to_date] ] ,
+									'status' : ['!=', 'On Leave'] ,
+									
+								}
+								
+							)
+		
+		if holiday_att_list :
+			for row in holiday_att_list :
+				holiday_att_doc = frappe.get_doc('Attendance', row.name)
+				holiday_att_doc.cancel()

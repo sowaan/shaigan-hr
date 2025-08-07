@@ -156,46 +156,45 @@ def check_and_create_quarter_leaves(doc):
 
 				# frappe.msgprint(str(att_list))	
 
-			if att_list:
-				for att in att_list:
-					att_doc = frappe.get_doc("Attendance", att.name)
-					t_req = 0
-					req = 0
-					table_length = len(att_doc.custom_quarter_leaves)
+			for att in att_list:
+				att_doc = frappe.get_doc("Attendance", att.name)
+				t_req = 0
+				req = 0
+				table_length = len(att_doc.custom_quarter_leaves)
 
-					if table_length > 2:
-						table_length = 2
+				if table_length > 2:
+					table_length = 2
 
-					if att_doc.custom_attendance_status == 'Half Day':
-						t_req = 2
-					elif att_doc.custom_attendance_status == '3 Quarters':
-						t_req = 1
+				if att_doc.custom_attendance_status == 'Half Day':
+					t_req = 2
+				elif att_doc.custom_attendance_status == '3 Quarters':
+					t_req = 1
 
-					if att_doc.custom_attendance_status in ['Half Day', '3 Quarters']:
-						req = t_req - table_length
+				if att_doc.custom_attendance_status in ['Half Day', '3 Quarters']:
+					req = t_req - table_length
 
-						while req > 0:
-							req -= 1
-							leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
-							leave_details = leave_details_list["leave_allocation"]
+					while req > 0:
+						req -= 1
+						leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
+						leave_details = leave_details_list["leave_allocation"]
 
-							leave_type = "Leave Without Pay"
-							if leave_details:
-								if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 0.25:
-									leave_type = "Casual Leave"
-								elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.25:
-									leave_type = "Sick Leave"
-								else:
-									leave_type = "Leave Without Pay"
-							
-							if emp.employment_type == 'Probation' and leave_type == "Casual Leave":
+						leave_type = "Leave Without Pay"
+						if leave_details:
+							if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 0.25:
+								leave_type = "Casual Leave"
+							elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.25:
+								leave_type = "Sick Leave"
+							else:
+								leave_type = "Leave Without Pay"
+						
+						if emp.employment_type == 'Probation' and leave_type == "Casual Leave":
+							continue
+
+						if emp.employment_type == 'Probation' and leave_type == "Sick Leave":
+							if doc.from_date != doc.to_date:
 								continue
 
-							if emp.employment_type == 'Probation' and leave_type == "Sick Leave":
-								if doc.from_date != doc.to_date:
-									continue
-
-							create_system_generated_quarter_leaves(att_doc, leave_type, doc)
+						create_system_generated_quarter_leaves(att_doc, leave_type, doc)
 
 
 
@@ -214,30 +213,30 @@ def check_and_create_full_and_half_leaves(doc):
 				},
 			order_by='attendance_date')
 				
-		if att_list:
-			for att in att_list:
-				att_doc = frappe.get_doc("Attendance", att.name)	
 
-				leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
-				leave_details = leave_details_list["leave_allocation"]
+		for att in att_list:
+			att_doc = frappe.get_doc("Attendance", att.name)	
 
-				leave_type = "Leave Without Pay"
-				if leave_details:
-					if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 1:
-						leave_type = "Casual Leave"
-					elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 1:
-						leave_type = "Sick Leave"
-					else:
-						leave_type = "Leave Without Pay"
+			leave_details_list = get_leave_details(att_doc.employee, att_doc.attendance_date)
+			leave_details = leave_details_list["leave_allocation"]
 
-				if emp.employment_type == 'Probation' and leave_type == "Casual Leave":
+			leave_type = "Leave Without Pay"
+			if leave_details:
+				if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 1:
+					leave_type = "Casual Leave"
+				elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 1:
+					leave_type = "Sick Leave"
+				else:
+					leave_type = "Leave Without Pay"
+
+			if emp.employment_type == 'Probation' and leave_type == "Casual Leave":
+				continue
+
+			if emp.employment_type == 'Probation' and leave_type == "Sick Leave":
+				if doc.from_date != doc.to_date:
 					continue
 
-				if emp.employment_type == 'Probation' and leave_type == "Sick Leave":
-					if doc.from_date != doc.to_date:
-						continue
-
-				create_system_generated_full_leaves(att_doc, leave_type, doc)
+			create_system_generated_full_leaves(att_doc, leave_type, doc)
 
 
 		half_att_list = frappe.get_list("Attendance",
