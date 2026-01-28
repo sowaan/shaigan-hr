@@ -20,6 +20,10 @@ def get_leave_type(employee, attendance_date) :
 			leave_type = "Casual Leave"
 		elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 1:
 			leave_type = "Sick Leave"
+		elif "Sick Leave Mkt" in leave_details and leave_details["Sick Leave Mkt"]["remaining_leaves"] >= 1:
+			leave_type = "Sick Leave Mkt"
+		elif "Casual Leave Mkt" in leave_details and leave_details["Casual Leave Mkt"]["remaining_leaves"] >= 1:
+			leave_type = "Casual Leave Mkt"
 		else:
 			leave_type = "Leave Without Pay"
 	
@@ -184,6 +188,10 @@ def check_and_create_quarter_leaves(doc):
 								leave_type = "Casual Leave"
 							elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.25:
 								leave_type = "Sick Leave"
+							elif "Sick Leave Mkt" in leave_details and leave_details["Sick Leave Mkt"]["remaining_leaves"] >= 0.25:
+								leave_type = "Sick Leave Mkt"
+							elif "Casual Leave Mkt" in leave_details and leave_details["Casual Leave Mkt"]["remaining_leaves"] >= 0.25:
+								leave_type = "Casual Leave Mkt"
 							else:
 								leave_type = "Leave Without Pay"
 						
@@ -226,6 +234,10 @@ def check_and_create_full_and_half_leaves(doc):
 					leave_type = "Casual Leave"
 				elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 1:
 					leave_type = "Sick Leave"
+				elif "Sick Leave Mkt" in leave_details and leave_details["Sick Leave Mkt"]["remaining_leaves"] >= 1:
+					leave_type = "Sick Leave Mkt"
+				elif "Casual Leave Mkt" in leave_details and leave_details["Casual Leave Mkt"]["remaining_leaves"] >= 1:
+					leave_type = "Casual Leave Mkt"
 				else:
 					leave_type = "Leave Without Pay"
 
@@ -265,6 +277,10 @@ def check_and_create_full_and_half_leaves(doc):
 							leave_type = "Casual Leave"
 						elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.5:
 							leave_type = "Sick Leave"
+						elif "Sick Leave Mkt" in leave_details and leave_details["Sick Leave Mkt"]["remaining_leaves"] >= 0.5:
+							leave_type = "Sick Leave Mkt"
+						elif "Casual Leave Mkt" in leave_details and leave_details["Casual Leave Mkt"]["remaining_leaves"] >= 0.5:
+							leave_type = "Casual Leave Mkt"
 						else:
 							leave_type = "Leave Without Pay"
 

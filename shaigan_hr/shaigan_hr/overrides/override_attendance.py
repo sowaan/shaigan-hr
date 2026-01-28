@@ -324,10 +324,14 @@ class OverrideAttendance(Attendance):
 				if leave_details :
 					leave_type = None
 
-					if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 0.25 :
+					if "Casual Leave" in leave_details and leave_details["Casual Leave"]["remaining_leaves"] >= 0.25:
 						leave_type = "Casual Leave"
-					elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.25 :
+					elif "Sick Leave" in leave_details and leave_details["Sick Leave"]["remaining_leaves"] >= 0.25:
 						leave_type = "Sick Leave"
+					elif "Sick Leave Mkt" in leave_details and leave_details["Sick Leave Mkt"]["remaining_leaves"] >= 0.25:
+						leave_type = "Sick Leave Mkt"
+					elif "Casual Leave Mkt" in leave_details and leave_details["Casual Leave Mkt"]["remaining_leaves"] >= 0.25:
+						leave_type = "Casual Leave Mkt"
 					else:
 						leave_type = "Leave Without Pay"
 
