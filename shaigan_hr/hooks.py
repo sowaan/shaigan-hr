@@ -160,7 +160,10 @@ override_doctype_class = {
 doc_events = {
 	"Designation":{
 		"before_save": "shaigan_hr.shaigan_hr.events.designation.designation_allowance_update"
-	}
+	},
+  "Employee": {
+      "before_save": "shaigan_hr.shaigan_hr.events.designation.update_designation_on_employee_save"
+  }
 }
 
 # Scheduled Tasks

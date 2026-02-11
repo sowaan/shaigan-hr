@@ -6,6 +6,7 @@ def designation_allowance_update(self, method):
         for row in self.custom_allowance:
             if row.company:
                 all_employees = frappe.get_list("Employee", filters={"designation": self.name, "company": row.company})
+                frappe.msgprint(f"row.inflation_allowance {row.inflation_allowance}")
                 for employee in all_employees:
                     if row.maintenance_allowance:
                         frappe.db.set_value("Employee", employee.name, "custom_maintenance_allowances_amount", row.maintenance_allowance)
@@ -19,3 +20,25 @@ def designation_allowance_update(self, method):
                         frappe.db.set_value("Employee", employee.name, "custom_entertainment_allowance_", row.entertainment_allowance)
                     if row.conveyance_allowance:
                         frappe.db.set_value("Employee", employee.name, "custom_conveyance_allowance_amount_1", row.conveyance_allowance)
+
+def update_designation_on_employee_save(doc, method):
+    if not doc.designation:
+        return
+
+    designation = frappe.get_doc("Designation", doc.designation)
+    
+    for row in designation.custom_allowance:
+        if row.company == doc.company:
+
+            update_values = {
+                "custom_maintenance_allowances_amount": row.maintenance_allowance,
+                "custom_vehicle_allowances_amount": row.vehicle_allowance,
+                "custom_inflation_allowance_amount": row.inflation_allowance,
+                "custom_postage_allowance": row.postage_allowance,
+                "custom_entertainment_allowance_": row.entertainment_allowance,
+                "custom_conveyance_allowance_amount_1": row.conveyance_allowance
+            }
+
+            doc.db_set(update_values)
+            break
+
